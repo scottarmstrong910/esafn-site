@@ -1,0 +1,1470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ESAFN &mdash; Emergency Services Aviation Fuel Network</title>
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Barlow+Condensed:wght@400;600;700;900&family=Barlow:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0a0e14;--surface:#111722;--surface2:#161d2b;--border:#1e2a3a;--accent:#f0a500;--green:#00e676;--red:#ff3d3d;--amber:#ffb300;--blue:#29b6f6;--purple:#ce93d8;--text:#ffffff;--muted:#5a6a82;--mono:'Share Tech Mono',monospace;--display:'Barlow Condensed',sans-serif;--body:'Barlow',sans-serif;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:var(--body);min-height:100vh;overflow-x:hidden;}
+header{background:var(--surface);border-bottom:1px solid var(--border);padding:0 20px;height:56px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+.logo{display:flex;align-items:center;gap:10px;}
+.logo-mark{width:32px;height:32px;background:var(--accent);clip-path:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%);display:flex;align-items:center;justify-content:center;font-size:14px;color:#000;font-weight:900;font-family:var(--display);}
+.logo-text{font-family:var(--display);font-weight:900;font-size:18px;letter-spacing:0.08em;color:#fff;}
+.logo-text span{color:var(--accent);}
+.header-right{display:flex;align-items:center;gap:12px;}
+.unit-badge{font-family:var(--mono);font-size:11px;color:var(--accent);background:rgba(240,165,0,0.1);border:1px solid rgba(240,165,0,0.3);padding:4px 10px;border-radius:3px;letter-spacing:0.1em;}
+.utc-clock{font-family:var(--mono);font-size:12px;color:var(--muted);}
+.sync-pill{display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:10px;letter-spacing:0.1em;padding:4px 9px;border-radius:3px;border:1px solid var(--border);color:var(--muted);}
+.sync-dot{width:7px;height:7px;border-radius:50%;background:var(--muted);}
+.sync-pill.live{color:var(--green);border-color:rgba(0,230,118,0.35);}
+.sync-pill.live .sync-dot{background:var(--green);box-shadow:0 0 6px var(--green);animation:pg 2s infinite;}
+.sync-pill.busy{color:var(--accent);border-color:rgba(240,165,0,0.35);}
+.sync-pill.busy .sync-dot{background:var(--accent);}
+.sync-pill.offline{color:var(--red);border-color:rgba(255,61,61,0.45);}
+.sync-pill.offline .sync-dot{background:var(--red);}
+.modal.busy{opacity:0.55;pointer-events:none;}
+.beta-btn{background:none;border:1px dashed var(--purple);color:var(--purple);font-family:var(--mono);font-size:10px;letter-spacing:0.12em;padding:4px 9px;border-radius:3px;cursor:pointer;transition:background .15s;}
+.beta-btn:hover{background:rgba(206,147,216,0.12);}
+.warn-box{background:rgba(255,61,61,0.1);border:1px solid rgba(255,61,61,0.4);border-radius:6px;padding:12px 14px;font-family:var(--mono);font-size:11px;color:var(--red);line-height:1.7;letter-spacing:0.04em;margin-bottom:16px;}
+/* LOGIN */
+#login-screen{display:flex;align-items:center;justify-content:center;min-height:calc(100vh - 56px);padding:20px;}
+.login-box{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:40px;width:100%;max-width:380px;text-align:center;}
+.login-box h2{font-family:var(--display);font-size:28px;font-weight:900;letter-spacing:0.05em;color:#fff;margin-bottom:6px;}
+.login-box p{font-size:13px;color:var(--muted);margin-bottom:32px;line-height:1.5;}
+.pin-input-row{display:flex;gap:10px;justify-content:center;margin-bottom:24px;}
+.pin-digit{width:52px;height:60px;background:var(--bg);border:2px solid var(--border);border-radius:6px;text-align:center;font-family:var(--mono);font-size:24px;color:#fff;outline:none;transition:border-color 0.2s;}
+.pin-digit:focus{border-color:var(--accent);}
+.btn-primary{width:100%;padding:14px;background:var(--accent);color:#000;border:none;border-radius:6px;font-family:var(--display);font-size:16px;font-weight:700;letter-spacing:0.1em;cursor:pointer;transition:opacity 0.15s,transform 0.1s;}
+.btn-primary:hover{opacity:0.9;transform:translateY(-1px);}
+.login-error{color:var(--red);font-size:12px;font-family:var(--mono);margin-top:12px;display:none;}
+/* APP */
+#app-screen{display:none;}
+#main-view{padding:16px 20px;}
+/* BASE CARD */
+.base-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;margin-bottom:20px;overflow:hidden;}
+.base-card.low-fuel{border-color:rgba(255,61,61,0.55);}
+.base-header{padding:16px 20px;border-bottom:1px solid var(--border);}
+.base-title-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;}
+.base-name{font-family:var(--display);font-size:22px;font-weight:900;color:#fff;letter-spacing:0.03em;}
+.base-icao{font-family:var(--mono);font-size:11px;color:var(--accent);background:rgba(240,165,0,0.1);border:1px solid rgba(240,165,0,0.3);padding:2px 8px;border-radius:3px;letter-spacing:0.1em;}
+.base-meta{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:12px;}
+.base-meta span{font-family:var(--mono);font-size:13px;color:#ffffff;letter-spacing:0.06em;text-transform:uppercase;}
+/* Fuel row */
+.fuel-row{display:flex;align-items:center;gap:12px;margin-bottom:12px;}
+.status-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0;}
+.status-dot.serviceable{background:var(--green);box-shadow:0 0 8px var(--green);animation:pg 2s infinite;}
+.status-dot.limited{background:var(--amber);box-shadow:0 0 8px var(--amber);animation:pa 2s infinite;}
+.status-dot.unserviceable{background:var(--red);box-shadow:0 0 8px var(--red);}
+@keyframes pg{0%,100%{box-shadow:0 0 6px var(--green)}50%{box-shadow:0 0 14px var(--green)}}
+@keyframes pa{0%,100%{box-shadow:0 0 6px var(--amber)}50%{box-shadow:0 0 14px var(--amber)}}
+.fuel-bar-wrap{flex:1;height:6px;background:var(--border);border-radius:3px;overflow:hidden;position:relative;}
+.fuel-bar{height:100%;border-radius:3px;transition:width 0.5s ease;}
+.fuel-bar.high{background:var(--green);}
+.fuel-bar.medium{background:var(--amber);}
+.fuel-bar.low{background:var(--red);}
+/* 1000 L threshold marker on the bar */
+.thresh-mark{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--red);opacity:0.85;}
+.fuel-qty-display{font-family:var(--mono);font-size:20px;font-weight:bold;white-space:nowrap;}
+.fuel-qty-display.high{color:var(--green);}
+.fuel-qty-display.medium{color:var(--amber);}
+.fuel-qty-display.low,.fuel-qty-display.unavailable{color:var(--red);}
+.fuel-qty-unit{font-family:var(--mono);font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-left:4px;}
+/* LOW FUEL BANNER */
+.lowfuel-banner{display:none;align-items:center;gap:12px;flex-wrap:wrap;background:rgba(255,61,61,0.12);border:1px solid rgba(255,61,61,0.45);border-radius:8px;padding:11px 14px;margin-bottom:12px;}
+.lowfuel-banner.show{display:flex;animation:flash-border 1.6s infinite;}
+@keyframes flash-border{0%,100%{border-color:rgba(255,61,61,0.45)}50%{border-color:rgba(255,61,61,1)}}
+.lowfuel-text{flex:1;min-width:200px;font-family:var(--mono);font-size:12px;color:var(--red);letter-spacing:0.06em;text-transform:uppercase;line-height:1.5;}
+.btn-sms{background:var(--red);color:#fff;border:none;border-radius:6px;font-family:var(--display);font-size:13px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;padding:9px 16px;cursor:pointer;white-space:nowrap;transition:opacity .15s,transform .1s;}
+.btn-sms:hover{opacity:.88;transform:translateY(-1px);}
+/* REFUEL STRIP (expandable list under bowser details) */
+.refuel-strip{border:1px solid var(--border);border-radius:8px;background:var(--surface2);margin-bottom:12px;overflow:hidden;}
+.refuel-strip-toggle{width:100%;display:flex;align-items:center;gap:10px;background:none;border:none;padding:10px 14px;cursor:pointer;text-align:left;font-family:var(--mono);font-size:12px;letter-spacing:0.1em;text-transform:uppercase;color:#fff;transition:background .15s;}
+.refuel-strip-toggle:hover{background:rgba(255,255,255,0.04);}
+.chev{display:inline-block;color:var(--accent);font-size:11px;transition:transform .2s;}
+.refuel-strip.open .chev{transform:rotate(90deg);}
+.count-pill{margin-left:auto;font-family:var(--mono);font-size:11px;color:var(--accent);background:rgba(240,165,0,0.12);border:1px solid rgba(240,165,0,0.35);border-radius:10px;padding:1px 9px;}
+.refuel-strip-body{display:none;border-top:1px solid var(--border);max-height:260px;overflow-y:auto;}
+.refuel-strip.open .refuel-strip-body{display:block;}
+.refuel-item{display:grid;grid-template-columns:130px 90px 1fr 90px 100px;gap:10px;align-items:center;padding:10px 14px;border-bottom:1px solid var(--border);font-family:var(--mono);font-size:12px;}
+.refuel-item:last-child{border-bottom:none;}
+.refuel-item .ri-time{color:var(--muted);}
+.refuel-item .ri-reg{color:var(--accent);font-weight:bold;}
+.refuel-item .ri-who{color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.refuel-item .ri-qty{color:var(--accent);text-align:right;font-weight:bold;}
+.refuel-item .ri-after{text-align:right;}
+.refuel-strip-empty{padding:16px 14px;font-family:var(--mono);font-size:11px;color:var(--muted);letter-spacing:0.06em;text-align:center;}
+/* Status badges row */
+.status-badges{display:flex;gap:8px;flex-wrap:wrap;}
+.status-badge{font-family:var(--display);font-size:13px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;padding:8px 16px;border-radius:6px;border:none;cursor:default;}
+.status-badge.serviceable{background:rgba(0,230,118,0.15);color:var(--green);border:1px solid rgba(0,230,118,0.4);}
+.status-badge.unserviceable{background:rgba(255,61,61,0.15);color:var(--red);border:1px solid rgba(255,61,61,0.4);}
+.status-badge.limited{background:rgba(255,179,0,0.15);color:var(--amber);border:1px solid rgba(255,179,0,0.4);}
+/* Fuel check status badge - clickable, flashes */
+.fuelchk-badge{font-family:var(--display);font-size:13px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;padding:8px 16px;border-radius:6px;cursor:pointer;border:none;transition:opacity 0.2s,transform 0.1s;}
+.fuelchk-badge:hover{opacity:0.85;transform:translateY(-1px);}
+.fuelchk-badge.ok{background:rgba(0,230,118,0.15);color:var(--green);border:1px solid rgba(0,230,118,0.4);}
+.fuelchk-badge.overdue{background:rgba(255,61,61,0.15);color:var(--red);border:1px solid rgba(255,61,61,0.4);animation:flash-red 1s infinite;}
+.fuelchk-badge.never{background:rgba(255,61,61,0.15);color:var(--red);border:1px solid rgba(255,61,61,0.4);animation:flash-red 1s infinite;}
+@keyframes flash-red{0%,100%{opacity:1}50%{opacity:0.4}}
+/* Action buttons */
+.action-btns{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;padding:14px 20px;border-bottom:1px solid var(--border);}
+.btn-act{padding:12px 6px;border:none;border-radius:6px;font-family:var(--display);font-size:13px;font-weight:700;letter-spacing:0.07em;cursor:pointer;text-transform:uppercase;transition:opacity 0.15s,transform 0.1s;}
+.btn-act:hover{opacity:0.88;transform:translateY(-1px);}
+.btn-act:disabled{opacity:0.3;cursor:not-allowed;transform:none;}
+.btn-act.refuel{background:var(--accent);color:#000;}
+.btn-act.replen{background:var(--blue);color:#000;}
+.btn-act.fuelchk{background:var(--purple);color:#000;}
+/* Log section - hidden by default, shown when expanded */
+.card-logs{display:none;}
+.card-logs.open{display:block;}
+.card-log-bar{display:flex;background:var(--surface2);border-bottom:1px solid var(--border);}
+.card-log-tab{background:none;border:none;color:#ffffff;font-family:var(--mono);font-size:13px;font-weight:600;letter-spacing:0.08em;padding:11px 16px;cursor:pointer;border-bottom:2px solid transparent;transition:color 0.2s,border-color 0.2s;text-transform:uppercase;white-space:nowrap;}
+.card-log-tab.active{color:#ffffff;border-bottom-color:#ffffff;}
+/* Fuel check tab colour states */
+.card-log-tab.fuelchk-ok{color:var(--green);}
+.card-log-tab.fuelchk-ok.active{border-bottom-color:var(--green);}
+.card-log-tab.fuelchk-overdue{color:var(--red);}
+.card-log-tab.fuelchk-overdue.active{border-bottom-color:var(--red);}
+.card-log-pane{display:none;padding:14px 16px;}
+.card-log-pane.active{display:block;}
+.log-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;gap:8px;flex-wrap:wrap;}
+.log-top h4{font-family:var(--display);font-size:15px;font-weight:700;letter-spacing:0.05em;color:#fff;}
+.log-top-btns{display:flex;gap:8px;}
+.btn-export{background:none;border:1px solid var(--accent);color:var(--accent);font-family:var(--mono);font-size:10px;letter-spacing:0.1em;text-transform:uppercase;padding:5px 12px;border-radius:4px;cursor:pointer;transition:background 0.2s;}
+.btn-export:hover{background:rgba(240,165,0,0.1);}
+.btn-export.form{border-color:var(--purple);color:var(--purple);}
+.btn-export.form:hover{background:rgba(206,147,216,0.12);}
+.log-table-wrap{overflow-x:auto;}
+.log-table{width:100%;border-collapse:collapse;min-width:500px;}
+.log-table th{font-family:var(--mono);font-size:9px;color:#ffffff;text-transform:uppercase;letter-spacing:0.1em;text-align:left;padding:7px 10px;border-bottom:1px solid var(--border);white-space:nowrap;}
+.log-table td{font-family:var(--mono);font-size:14px;color:#ffffff;padding:9px 10px;border-bottom:1px solid var(--border);vertical-align:top;}
+.log-table tr:last-child td{border-bottom:none;}
+.log-empty{text-align:center;color:#ffffff;font-family:var(--mono);font-size:11px;padding:28px;letter-spacing:0.06em;}
+.pass{color:var(--green);}
+.fail{color:var(--red);font-weight:bold;}
+/* MODALS */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.82);z-index:200;align-items:flex-start;justify-content:center;padding:16px;overflow-y:auto;}
+.modal-overlay.open{display:flex;}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:10px;width:100%;max-width:500px;padding:28px;animation:slideUp 0.2s ease;margin:auto;}
+.modal.wide{max-width:620px;}
+@keyframes slideUp{from{transform:translateY(16px);opacity:0}to{transform:translateY(0);opacity:1}}
+.modal-title{font-family:var(--display);font-size:22px;font-weight:900;color:#fff;letter-spacing:0.05em;margin-bottom:4px;}
+.modal-subtitle{font-family:var(--mono);font-size:11px;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:22px;}
+.modal-subtitle.refuel{color:var(--accent);}
+.modal-subtitle.replen{color:var(--blue);}
+.modal-subtitle.fuelchk{color:var(--purple);}
+.modal-subtitle.alert{color:var(--red);}
+.form-ref{font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:0.12em;margin-bottom:18px;padding-bottom:12px;border-bottom:1px solid var(--border);}
+.ff{margin-bottom:14px;}
+.ff label{font-family:var(--mono);font-size:13px;color:#ffffff;text-transform:uppercase;letter-spacing:0.1em;display:block;margin-bottom:5px;}
+.ff input,.ff textarea,.ff select{width:100%;background:#ffffff;border:1px solid var(--border);border-radius:6px;padding:10px 14px;color:#000000;font-family:var(--mono);font-size:13px;outline:none;transition:border-color 0.2s;}
+.ff input:focus,.ff textarea:focus,.ff select:focus{border-color:var(--accent);}
+.ff input::placeholder,.ff textarea::placeholder{color:var(--muted);}
+.ff textarea{resize:vertical;min-height:64px;line-height:1.5;}
+.ff select{-webkit-appearance:none;appearance:none;cursor:pointer;background-image:linear-gradient(45deg,transparent 50%,#000 50%),linear-gradient(135deg,#000 50%,transparent 50%);background-position:calc(100% - 18px) 18px,calc(100% - 13px) 18px;background-size:5px 5px,5px 5px;background-repeat:no-repeat;}
+select.res-pass{background-color:#d8ffe9;color:#04703c;font-weight:bold;}
+select.res-fail{background-color:#ffdede;color:#9d0000;font-weight:bold;}
+.frow{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.frow3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
+.calc-box{background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:10px 14px;font-family:var(--mono);font-size:20px;text-align:center;transition:color 0.2s;}
+.sec-div{border:none;border-top:1px solid var(--border);margin:18px 0;}
+.sec-title{font-family:var(--mono);font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:0.12em;margin-bottom:12px;}
+/* Segmented control */
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;}
+.seg-btn{padding:12px 8px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--muted);font-family:var(--display);font-size:14px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;cursor:pointer;transition:all .15s;}
+.seg-btn:hover{border-color:var(--purple);}
+.seg-btn.on{background:rgba(206,147,216,0.15);border-color:var(--purple);color:var(--purple);}
+.hint{font-family:var(--mono);font-size:10px;color:var(--muted);letter-spacing:0.06em;line-height:1.6;margin:-6px 0 14px;}
+.hint b{color:var(--amber);}
+.result-pair{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;}
+.result-card{background:var(--bg);border:1px solid var(--border);border-left:3px solid var(--green);border-radius:6px;padding:12px 14px;}
+.result-card.warn{border-left-color:var(--amber);}
+.result-card.bad{border-left-color:var(--red);}
+.result-card label{font-family:var(--mono);font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:0.1em;display:block;margin-bottom:4px;}
+.result-card .rval{font-family:var(--mono);font-size:19px;color:var(--green);}
+.result-card.warn .rval{color:var(--amber);}
+.result-card.bad .rval{color:var(--red);}
+.sms-preview{background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:14px;font-family:var(--mono);font-size:12px;color:#fff;line-height:1.7;white-space:pre-wrap;word-break:break-word;margin-bottom:14px;}
+.modal-actions{display:flex;gap:10px;margin-top:20px;}
+.btn-cancel{flex:1;padding:12px;background:none;border:1px solid var(--border);border-radius:6px;color:var(--muted);font-family:var(--display);font-size:14px;font-weight:600;letter-spacing:0.08em;cursor:pointer;transition:border-color 0.2s,color 0.2s;text-transform:uppercase;}
+.btn-cancel:hover{border-color:var(--text);color:var(--text);}
+.btn-confirm{flex:2;padding:12px;color:#000;border:none;border-radius:6px;font-family:var(--display);font-size:14px;font-weight:700;letter-spacing:0.1em;cursor:pointer;transition:opacity 0.15s;text-transform:uppercase;text-align:center;text-decoration:none;display:flex;align-items:center;justify-content:center;}
+.btn-confirm:hover{opacity:0.88;}
+.btn-confirm.refuel{background:var(--accent);}
+.btn-confirm.replen{background:var(--blue);}
+.btn-confirm.fuelchk{background:var(--purple);}
+.btn-confirm.alert{background:var(--red);color:#fff;}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(80px);color:#000;font-family:var(--display);font-weight:700;font-size:14px;letter-spacing:0.08em;padding:12px 24px;border-radius:6px;z-index:300;transition:transform 0.3s ease;white-space:nowrap;text-transform:uppercase;}
+.toast.show{transform:translateX(-50%) translateY(0);}
+@media(max-width:520px){header{padding:0 14px;}#main-view{padding:12px 14px;}.frow,.frow3,.check-grid,.result-pair,.seg{grid-template-columns:1fr;}.modal{padding:20px;}.action-btns{grid-template-columns:1fr;}.refuel-item{grid-template-columns:1fr 1fr;gap:4px 10px;}.refuel-item .ri-qty,.refuel-item .ri-after{text-align:left;}}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo"><div class="logo-mark">&#x2B21;</div><div class="logo-text">ES<span>AFN</span></div></div>
+  <div class="header-right"><button class="beta-btn" id="beta-btn" onclick="openReset()" style="display:none" title="Beta testing controls">BETA</button><div class="sync-pill" id="sync-pill" style="display:none"><span class="sync-dot"></span><span id="sync-text">LIVE</span></div><div class="unit-badge" id="unit-display" style="display:none"></div><div class="utc-clock" id="utc-clock"></div></div>
+</header>
+<div id="login-screen">
+  <div class="login-box">
+    <h2>UNIT ACCESS</h2>
+    <p>Enter your unit PIN to access the Emergency Services Aviation Fuel Network</p>
+    <div class="pin-input-row">
+      <input class="pin-digit" type="password" maxlength="1" inputmode="numeric" id="p1">
+      <input class="pin-digit" type="password" maxlength="1" inputmode="numeric" id="p2">
+      <input class="pin-digit" type="password" maxlength="1" inputmode="numeric" id="p3">
+      <input class="pin-digit" type="password" maxlength="1" inputmode="numeric" id="p4">
+    </div>
+    <button class="btn-primary" onclick="tryLogin()">AUTHENTICATE</button>
+    <div class="login-error" id="login-error">&#x26A0; INVALID UNIT PIN &mdash; TRY AGAIN</div>
+    <p style="margin-top:16px;font-size:11px;color:var(--muted)">Contact your unit fuel lead if you do not have a PIN.</p>
+  </div>
+</div>
+<div id="app-screen">
+  <div id="main-view">
+    <!-- Base cards injected by JS in correct order -->
+  </div>
+</div>
+
+<!-- AIRCRAFT REFUEL MODAL -->
+<div class="modal-overlay" id="modal-uplift">
+  <div class="modal">
+    <div class="modal-title">RECORD AIRCRAFT REFUEL</div>
+    <div class="modal-subtitle refuel" id="uplift-site-lbl"></div>
+    <div class="frow">
+      <div class="ff"><label>Aircraft Registration</label><input type="text" id="u-reg" placeholder="e.g. G-DSAA" maxlength="10" style="text-transform:uppercase"></div>
+      <div class="ff"><label>Aircraft Type</label><input type="text" id="u-type" placeholder="e.g. AW169"></div>
+    </div>
+    <div class="frow">
+      <div class="ff"><label>Pilot Name</label><input type="text" id="u-pilot" placeholder="Full name"></div>
+      <div class="ff"><label>Unit / Organisation</label><input type="text" id="u-unit" placeholder="e.g. DSAA"></div>
+    </div>
+    <hr class="sec-div"><div class="sec-title">&#x25B8; Bowser Flow Meter</div>
+    <div class="frow">
+      <div class="ff"><label>Counter Reading &mdash; Start (L)</label><input type="number" id="u-cstart" placeholder="0" min="0" oninput="calcUplift()"></div>
+      <div class="ff"><label>Counter Reading &mdash; End (L)</label><input type="number" id="u-cend" placeholder="0" min="0" oninput="calcUplift()"></div>
+    </div>
+    <div class="frow">
+      <div class="ff"><label>Quantity Refuelled (calculated)</label><div class="calc-box" id="u-qty-calc" style="color:#fff">&mdash; L</div></div>
+      <div class="ff"><label>Bowser Level After Refuel</label><div class="calc-box" id="u-rem-calc" style="color:#fff">&mdash; L</div></div>
+    </div>
+    <div class="ff"><label>Notes (optional)</label><textarea id="u-notes" placeholder="Any relevant notes&hellip;"></textarea></div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal('modal-uplift')">CANCEL</button>
+      <button class="btn-confirm refuel" onclick="confirmUplift()">CONFIRM REFUEL</button>
+    </div>
+  </div>
+</div>
+
+<!-- REPLENISHMENT MODAL -->
+<div class="modal-overlay" id="modal-replen">
+  <div class="modal">
+    <div class="modal-title">RECORD REPLENISHMENT</div>
+    <div class="modal-subtitle replen" id="replen-site-lbl"></div>
+    <div class="frow">
+      <div class="ff"><label>Name</label><input type="text" id="r-name" placeholder="Full name"></div>
+      <div class="ff"><label>Unit / Organisation</label><input type="text" id="r-unit" placeholder="e.g. DSAA"></div>
+    </div>
+    <div class="ff"><label>Tanker Registration / Delivery Reference</label><input type="text" id="r-tanker" placeholder="e.g. WX12 ABC or DN-2024-001"></div>
+    <div class="frow">
+      <div class="ff"><label>Bowser Level Before (L) <span style="color:var(--muted);font-size:9px">&mdash; live</span></label><input type="number" id="r-before" readonly></div>
+      <div class="ff"><label>Quantity Added (L)</label><input type="number" id="r-added" placeholder="0" min="0" oninput="calcReplen()"></div>
+    </div>
+    <div class="ff"><label>Bowser Level After Replenishment (calculated)</label><div class="calc-box" id="r-after-calc" style="color:#fff">&mdash; L</div></div>
+    <div class="frow">
+      <div class="ff"><label>Invoice No.</label><input type="text" id="r-batch" placeholder="e.g. INV-2024-001"></div>
+    </div>
+    <div class="ff"><label>Notes (optional)</label><textarea id="r-notes" placeholder="Delivery condition, seal numbers, etc."></textarea></div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal('modal-replen')">CANCEL</button>
+      <button class="btn-confirm replen" onclick="confirmReplen()">CONFIRM REPLENISHMENT</button>
+    </div>
+  </div>
+</div>
+
+<!-- FUEL CHECK / FRM-GO-402 MODAL -->
+<div class="modal-overlay" id="modal-fuelchk">
+  <div class="modal wide">
+    <div class="modal-title">FUEL INSTALLATION CHECK</div>
+    <div class="modal-subtitle fuelchk" id="fuelchk-site-lbl"></div>
+    <div class="form-ref">FRM-GO-402 &nbsp;&middot;&nbsp; FUEL INSTALLATION DAILY CHECK AND INSPECTIONS FUEL SAMPLE RECORD &nbsp;&middot;&nbsp; GAMA AVIATION (UK) LIMITED &nbsp;&middot;&nbsp; REV 0</div>
+
+    <div class="sec-title">&#x25B8; Inspection Type</div>
+    <div class="seg">
+      <button class="seg-btn on" id="seg-daily" onclick="setInspType('Daily')">Daily Inspection</button>
+      <button class="seg-btn" id="seg-rebulk" onclick="setInspType('Rebulk')">Rebulk (Post-Replenishment)</button>
+    </div>
+    <div class="hint" id="insp-hint">Before first use of the fuel installation each day, for in-use fuel installations.</div>
+
+    <div class="frow3">
+      <div class="ff"><label>Location</label><input type="text" id="fc-location" placeholder="Site"></div>
+      <div class="ff"><label>Fuel Grade</label><input type="text" id="fc-grade" placeholder="e.g. Jet A-1"></div>
+      <div class="ff"><label>Vehicle Reg / Tank Serial</label><input type="text" id="fc-tank" placeholder="e.g. WX12 ABC"></div>
+    </div>
+
+    <hr class="sec-div"><div class="sec-title">&#x25B8; Personnel &amp; Visual Inspection</div>
+    <div class="frow">
+      <div class="ff"><label>Daily Visual Inspection Complete &mdash; Sign</label><input type="text" id="fc-visual-sign" placeholder="Signature / initials"></div>
+      <div class="ff"><label>Name of Person Conducting Sample Check</label><input type="text" id="fc-name" placeholder="Full name"></div>
+    </div>
+    <div class="frow">
+      <div class="ff"><label>Unit / Organisation</label><input type="text" id="fc-unit" placeholder="e.g. DSAA"></div>
+      <div class="ff"><label>Expiry Date of Shell Capsules Tube</label><input type="date" id="fc-capsule-exp"></div>
+    </div>
+
+    <hr class="sec-div"><div class="sec-title">&#x25B8; Fuel Sample Results</div>
+    <div class="hint"><b>CB+CWD PASS</b> = Clear &amp; Bright visual and passed Shell capsule check. Record <b>Fail CB</b> and/or <b>FAIL CWD</b> if the third sample attempt at that point failed.</div>
+    <div class="frow3">
+      <div class="ff"><label>SUMP Drain</label>
+        <select id="fc-sump" onchange="styleResult(this)">
+          <option value="CB+CWD PASS">CB+CWD PASS</option>
+          <option value="Fail CB">Fail CB</option>
+          <option value="FAIL CWD">FAIL CWD</option>
+          <option value="Fail CB + FAIL CWD">Fail CB + FAIL CWD</option>
+          <option value="N/A">N/A &mdash; not sampled</option>
+        </select>
+      </div>
+      <div class="ff"><label>Filter Drain Port</label>
+        <select id="fc-filter" onchange="styleResult(this)">
+          <option value="CB+CWD PASS">CB+CWD PASS</option>
+          <option value="Fail CB">Fail CB</option>
+          <option value="FAIL CWD">FAIL CWD</option>
+          <option value="Fail CB + FAIL CWD">Fail CB + FAIL CWD</option>
+          <option value="N/A">N/A &mdash; not sampled</option>
+        </select>
+      </div>
+      <div class="ff"><label>Hose End</label>
+        <select id="fc-hose" onchange="styleResult(this)">
+          <option value="CB+CWD PASS">CB+CWD PASS</option>
+          <option value="Fail CB">Fail CB</option>
+          <option value="FAIL CWD">FAIL CWD</option>
+          <option value="Fail CB + FAIL CWD">Fail CB + FAIL CWD</option>
+          <option value="N/A">N/A &mdash; not sampled</option>
+        </select>
+      </div>
+    </div>
+    <div class="ff"><label>Time Sample Checks Complete (UTC)</label><input type="time" id="fc-time-complete"></div>
+
+    <hr class="sec-div"><div class="sec-title">&#x25B8; Bowser Flow Meter Readings</div>
+    <div class="frow">
+      <div class="ff"><label>Counter Reading &mdash; Start (L)</label><input type="number" id="fc-cstart" placeholder="0" min="0" oninput="calcFuelChk()"></div>
+      <div class="ff"><label>Counter Reading &mdash; End (L)</label><input type="number" id="fc-cend" placeholder="0" min="0" oninput="calcFuelChk()"></div>
+    </div>
+    <div class="ff"><label>Total Passed Through Meter (calculated)</label><div class="calc-box" id="fc-meter-total" style="color:#fff">&mdash; L</div></div>
+
+    <hr class="sec-div"><div class="sec-title">&#x25B8; Fuel Volumes</div>
+    <div class="frow">
+      <div class="ff"><label>Bowser Level Before Check (L) <span style="color:var(--muted);font-size:9px">&mdash; live</span></label><input type="number" id="fc-before" readonly></div>
+      <div class="ff"><label>Volume Drained / Sampled (L)</label><input type="number" id="fc-drained" placeholder="0" min="0" oninput="calcFuelChk()"></div>
+    </div>
+    <div class="ff">
+      <label>Volume Recycled Back to Bowser (L) <span style="color:var(--muted);font-size:9px">&mdash; fuel passed checks &amp; returned</span></label>
+      <input type="number" id="fc-recycled" placeholder="0" min="0" oninput="calcFuelChk()">
+    </div>
+    <div class="result-pair">
+      <div class="result-card" id="rc-net"><label>Net Fuel Disposed (L)</label><div class="rval" id="fc-net-val">&mdash; L</div></div>
+      <div class="result-card" id="rc-after"><label>Bowser Level After Check (L)</label><div class="rval" id="fc-after-val">&mdash; L</div></div>
+    </div>
+
+    <hr class="sec-div"><div class="sec-title">&#x25B8; Observations</div>
+    <div class="ff"><label>Observations</label><textarea id="fc-result" placeholder="e.g. Clear and bright, no contamination detected."></textarea></div>
+    <div class="ff"><label>Notes (optional)</label><textarea id="fc-notes" placeholder="Any additional notes&hellip;"></textarea></div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal('modal-fuelchk')">CANCEL</button>
+      <button class="btn-confirm fuelchk" onclick="confirmFuelChk()">CONFIRM &amp; RECORD FRM-GO-402</button>
+    </div>
+  </div>
+</div>
+
+<!-- REBULK PROMPT MODAL -->
+<div class="modal-overlay" id="modal-rebulk">
+  <div class="modal">
+    <div class="modal-title">REBULK RECORDED</div>
+    <div class="modal-subtitle replen" id="rebulk-site-lbl"></div>
+    <div class="hint" style="margin-bottom:18px" id="rebulk-hint"></div>
+    <div class="sms-preview" id="rebulk-detail"></div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal('modal-rebulk')">LATER</button>
+      <button class="btn-confirm fuelchk" onclick="startRebulkCheck()">OPEN FRM-GO-402</button>
+    </div>
+  </div>
+</div>
+
+<!-- MONTHLY PRINT MODAL -->
+<div class="modal-overlay" id="modal-print">
+  <div class="modal">
+    <div class="modal-title">PRINT MONTHLY RECORD</div>
+    <div class="modal-subtitle fuelchk" id="print-site-lbl"></div>
+    <div class="frow">
+      <div class="ff"><label>Month</label><select id="pr-month" onchange="updatePrintCounts()"></select></div>
+      <div class="ff"><label>Year</label><select id="pr-year" onchange="updatePrintCounts()"></select></div>
+    </div>
+    <div class="sec-title">&#x25B8; Records In Period</div>
+    <div class="sms-preview" id="pr-counts"></div>
+    <div class="hint">Produces an <b>A4 landscape</b> document: <b>Sheet 1</b> &mdash; FRM-GO-402 fuel sample record, 31 daily lines plus 10 rebulk lines. <b>Sheet 2</b> &mdash; monthly reconciliation ledger of every refuel, rebulk and check, with a balance cross-check for accounts and receipts.</div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal('modal-print')">CANCEL</button>
+      <button class="btn-confirm fuelchk" onclick="doPrint402()">GENERATE</button>
+    </div>
+  </div>
+</div>
+
+<!-- BETA RESET MODAL -->
+<div class="modal-overlay" id="modal-reset">
+  <div class="modal">
+    <div class="modal-title">RESET TEST DATA</div>
+    <div class="modal-subtitle alert">BETA TESTING &mdash; DESTRUCTIVE</div>
+    <div class="warn-box" id="reset-warn"></div>
+    <div class="ff"><label>Reset Code</label><input type="password" id="rs-code" placeholder="Admin reset code"></div>
+    <div class="ff"><label>Starting Bowser Level (L) &mdash; blank for full</label><input type="number" id="rs-level" placeholder="3000" min="0"></div>
+    <div class="ff"><label>Type RESET to confirm</label><input type="text" id="rs-confirm" placeholder="RESET" style="text-transform:uppercase"></div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal('modal-reset')">CANCEL</button>
+      <button class="btn-confirm alert" onclick="confirmReset()">WIPE ALL RECORDS</button>
+    </div>
+  </div>
+</div>
+
+<!-- LOW FUEL SMS ALERT MODAL -->
+<div class="modal-overlay" id="modal-lowfuel">
+  <div class="modal">
+    <div class="modal-title">&#x26A0; LOW FUEL ALERT</div>
+    <div class="modal-subtitle alert" id="lowfuel-site-lbl"></div>
+    <div class="ff"><label>Send text to</label><input type="tel" id="lf-phone" placeholder="e.g. 07483 486357" oninput="rebuildSmsLink()"></div>
+    <div class="sec-title">&#x25B8; Message Preview</div>
+    <div class="sms-preview" id="lf-preview"></div>
+    <div class="hint">Opens your phone&rsquo;s messaging app with the message ready &mdash; you press send. On a desktop browser, use Copy instead.</div>
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal('modal-lowfuel')">DISMISS</button>
+      <button class="btn-cancel" onclick="copySms()" style="flex:1">COPY</button>
+      <a class="btn-confirm alert" id="lf-sms-link" href="#">OPEN MESSAGES</a>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* ============================================================
+   CONFIG
+   ============================================================ */
+const LOW_FUEL_THRESHOLD = 1000;          // litres - below this triggers the SMS alert
+const DEFAULT_ALERT_PHONE = '07483486357'; // pre-filled recipient for the low fuel text
+const DEFAULT_FUEL_GRADE  = 'Jet A-1';
+
+// Sites, logs and access codes are held server-side. Nothing authoritative lives in this page.
+let SITES={},logs={},SEQ=-1,accessCode=null,syncTimer=null,cardsBuilt=false,inFlight=false;
+
+let currentUnit=null,currentSite=null,inspType='Daily',pendingRebulkSid=null,lowFuelSid=null,alertedSites={},printSid=null,myBase=null;
+
+// Monthly form sizing
+const FORM_DAILY_ROWS=31;   // one line per day of the month
+const FORM_REBULK_ROWS=10;  // additional lines for rebulk samples
+const LEDGER_ROWS=50;       // supplementary reconciliation ledger lines
+const MONTH_NAMES=['January','February','March','April','May','June','July','August','September','October','November','December'];
+
+function pad(n){return String(n).padStart(2,'0');}
+function nowUTC(){const n=new Date();return `${pad(n.getUTCDate())}/${pad(n.getUTCMonth()+1)}/${n.getUTCFullYear()} ${pad(n.getUTCHours())}:${pad(n.getUTCMinutes())}Z`;}
+function dateUTC(){const n=new Date();return `${pad(n.getUTCDate())}/${pad(n.getUTCMonth()+1)}/${n.getUTCFullYear()}`;}
+function timeUTC(){const n=new Date();return `${pad(n.getUTCHours())}:${pad(n.getUTCMinutes())}`;}
+function esc(s){return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+function updateClock(){const n=new Date();document.getElementById('utc-clock').textContent=`${pad(n.getUTCHours())}:${pad(n.getUTCMinutes())}:${pad(n.getUTCSeconds())}Z`;}
+setInterval(updateClock,1000);updateClock();
+
+// PIN
+const pinIds=['p1','p2','p3','p4'];
+pinIds.forEach((id,i)=>{
+  const el=document.getElementById(id);
+  el.addEventListener('input',()=>{if(el.value.length===1&&i<3)document.getElementById(pinIds[i+1]).focus();});
+  el.addEventListener('keydown',e=>{if(e.key==='Backspace'&&el.value===''&&i>0)document.getElementById(pinIds[i-1]).focus();if(e.key==='Enter')tryLogin();});
+});
+
+/* ============================================================
+   SERVER TRANSPORT
+   ============================================================ */
+async function api(action,payload){
+  const res=await fetch('/api',{
+    method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify(Object.assign({action,code:accessCode},payload||{}))
+  });
+  let data={};
+  try{data=await res.json();}catch(e){}
+  if(!res.ok){const err=new Error(data.error||('Connection error '+res.status));err.state=data.state;err.status=res.status;throw err;}
+  return data;
+}
+
+function setSync(mode){
+  const pill=document.getElementById('sync-pill');
+  if(!pill)return;
+  pill.style.display='flex';
+  pill.className='sync-pill '+mode;
+  document.getElementById('sync-text').textContent=
+    mode==='live'?'LIVE':mode==='busy'?'SAVING':'OFFLINE';
+}
+
+function applyState(st){
+  if(!st)return;
+  SITES=st.sites||{};logs=st.logs||{};SEQ=st.seq;
+  if(!cardsBuilt){buildAllCards();cardsBuilt=true;}
+  refreshAll();
+}
+
+function refreshAll(){
+  Object.keys(SITES).forEach(k=>{
+    const sid=parseInt(k,10);
+    if(!document.getElementById('base-card-'+sid))return;
+    updateBaseCard(sid);
+    renderLog(sid,'uplift');renderLog(sid,'replen');renderLog(sid,'fuelchk');
+    renderRefuelStrip(sid);
+  });
+}
+
+// Push a record to the server. The server recomputes the bowser level from
+// its own state, so a stale tab can never roll the level backwards.
+async function submitRecord(type,sid,record){
+  if(inFlight)return false;
+  inFlight=true;setSync('busy');
+  document.querySelectorAll('.modal-overlay.open .modal').forEach(m=>m.classList.add('busy'));
+  try{
+    const res=await api('record',{type,sid,record});
+    applyState(res.state);setSync('live');
+    return true;
+  }catch(e){
+    if(e.state)applyState(e.state);
+    setSync(e.status?'live':'offline');
+    showToast('⚠ '+String(e.message||e).toUpperCase(),true);
+    return false;
+  }finally{
+    inFlight=false;
+    document.querySelectorAll('.modal .busy,.modal.busy').forEach(m=>m.classList.remove('busy'));
+  }
+}
+
+// Poll only while the tab is actually being looked at. A forgotten tab in a
+// hangar would otherwise hit the API every few seconds forever and burn through
+// the hosting quota for no benefit.
+const POLL_MS=30000;
+let lastPoll=0;
+
+async function pullState(force){
+  if(inFlight)return;
+  if(!force&&Date.now()-lastPoll<POLL_MS-500)return;
+  lastPoll=Date.now();
+  try{
+    const res=await api('state');
+    setSync('live');
+    if(res.state&&res.state.seq!==SEQ)applyState(res.state);
+  }catch(e){setSync('offline');}
+}
+
+function startSync(){
+  if(syncTimer)clearInterval(syncTimer);
+  syncTimer=setInterval(()=>{if(!document.hidden)pullState();},POLL_MS);
+  document.addEventListener('visibilitychange',()=>{if(!document.hidden)pullState(true);});
+  window.addEventListener('focus',()=>pullState());
+}
+
+async function tryLogin(){
+  const pin=pinIds.map(id=>document.getElementById(id).value).join('');
+  const errEl=document.getElementById('login-error');
+  errEl.style.display='none';
+  accessCode=pin;
+  try{
+    const res=await api('login');
+    currentUnit=res.unit;myBase=res.base;
+    document.getElementById('login-screen').style.display='none';
+    document.getElementById('app-screen').style.display='block';
+    document.getElementById('unit-display').textContent=currentUnit;
+    document.getElementById('unit-display').style.display='block';
+    document.getElementById('beta-btn').style.display='block';
+    setSync('live');
+    window.__lastReset=res.state.lastReset;
+    applyState(res.state);
+    startSync();
+  }catch(e){
+    accessCode=null;
+    errEl.innerHTML='&#x26A0; '+String(e.message||e).toUpperCase();
+    errEl.style.display='block';
+    pinIds.forEach(id=>document.getElementById(id).value='');
+    document.getElementById('p1').focus();
+  }
+}
+
+// Build base cards in correct order (user's base first)
+function buildAllCards(){
+  const order=Object.values(SITES).sort((a,b)=>{
+    if(a.id===myBase) return -1;
+    if(b.id===myBase) return 1;
+    return a.id-b.id;
+  });
+  const container=document.getElementById('main-view');
+  container.innerHTML='';
+  order.forEach(site=>container.appendChild(buildBaseCard(site.id)));
+  setInterval(()=>Object.keys(SITES).forEach(id=>updateFuelChkBadge(parseInt(id,10))),60000);
+}
+
+function buildBaseCard(sid){
+  const site=SITES[sid];
+  const threshPct=Math.round(LOW_FUEL_THRESHOLD/site.maxCapacity*100);
+  const div=document.createElement('div');
+  div.className='base-card';
+  div.id=`base-card-${sid}`;
+  div.innerHTML=`
+    <div class="base-header">
+      <div class="base-title-row"><div class="base-name">${esc(site.name)}</div><div class="base-icao">${esc(site.icao)}</div></div>
+      <div class="base-meta"><span>${esc(site.region)}</span><span>H24</span><span>${esc(site.phone)}</span><span>${esc(site.email)}</span></div>
+      <div class="fuel-row">
+        <div class="status-dot serviceable" id="base-${sid}-dot"></div>
+        <div class="fuel-bar-wrap">
+          <div class="fuel-bar high" id="base-${sid}-bar" style="width:100%"></div>
+          <div class="thresh-mark" style="left:${threshPct}%" title="${LOW_FUEL_THRESHOLD} L alert threshold"></div>
+        </div>
+        <div style="display:flex;align-items:baseline;gap:2px">
+          <span class="fuel-qty-display high" id="base-${sid}-qty">3,000</span>
+          <span class="fuel-qty-unit">L</span>
+        </div>
+      </div>
+
+      <!-- LOW FUEL BANNER -->
+      <div class="lowfuel-banner" id="base-${sid}-lowfuel">
+        <div class="lowfuel-text" id="base-${sid}-lowfuel-text"></div>
+        <button class="btn-sms" onclick="openLowFuel(${sid})">&#x2709; TEXT ALERT</button>
+      </div>
+
+      <!-- EXPANDABLE AIRCRAFT REFUEL LIST -->
+      <div class="refuel-strip" id="rstrip-${sid}">
+        <button class="refuel-strip-toggle" onclick="toggleRefuelStrip(${sid})">
+          <span class="chev">&#x25B8;</span> Aircraft Refuels
+          <span class="count-pill" id="rstrip-count-${sid}">0</span>
+        </button>
+        <div class="refuel-strip-body" id="rstrip-body-${sid}">
+          <div class="refuel-strip-empty">NO REFUELS RECORDED</div>
+        </div>
+      </div>
+
+      <div class="status-badges">
+        <span class="status-badge serviceable" id="base-${sid}-tag">SERVICEABLE</span>
+        <button class="fuelchk-badge never" id="base-${sid}-fuelchk-badge" onclick="openFuelChk(${sid})">FUEL CHECK</button>
+      </div>
+    </div>
+    <div class="action-btns">
+      <button class="btn-act refuel" id="base-${sid}-uplift-btn" onclick="openUplift(${sid})">AIRCRAFT REFUEL</button>
+      <button class="btn-act replen" onclick="openReplen(${sid})">REPLENISHMENT</button>
+      <button class="btn-act fuelchk" onclick="openFuelChk(${sid})">FUEL CHECK</button>
+    </div>
+    <div class="card-logs" id="logs-${sid}">
+      <div class="card-log-bar">
+        <button class="card-log-tab active" id="tab-${sid}-uplift" onclick="switchLog(event,${sid},'uplift')">AIRCRAFT REFUEL</button>
+        <button class="card-log-tab" id="tab-${sid}-replen" onclick="switchLog(event,${sid},'replen')">REPLENISHMENT</button>
+        <button class="card-log-tab" id="tab-${sid}-fuelchk" onclick="switchLog(event,${sid},'fuelchk')">FRM-GO-402</button>
+      </div>
+      <div class="card-log-pane active" id="pane-${sid}-uplift">
+        <div class="log-top"><h4>AIRCRAFT REFUEL LOG</h4><div class="log-top-btns"><button class="btn-export" onclick="exportCSV(${sid},'uplift')">&#x2193; CSV</button></div></div>
+        <div class="log-empty" id="empty-${sid}-uplift">NO REFUELS RECORDED</div>
+        <div class="log-table-wrap"><table class="log-table" id="table-${sid}-uplift" style="display:none">
+          <thead><tr><th>Date/Time (UTC)</th><th>Reg</th><th>Type</th><th>Pilot</th><th>Unit</th><th>Ctr Start</th><th>Ctr End</th><th>Qty (L)</th><th>Bowser After (L)</th><th>Notes</th></tr></thead>
+          <tbody id="tbody-${sid}-uplift"></tbody>
+        </table></div>
+      </div>
+      <div class="card-log-pane" id="pane-${sid}-replen">
+        <div class="log-top"><h4>REPLENISHMENT LOG</h4><div class="log-top-btns"><button class="btn-export" onclick="exportCSV(${sid},'replen')">&#x2193; CSV</button></div></div>
+        <div class="log-empty" id="empty-${sid}-replen">NO REPLENISHMENTS RECORDED</div>
+        <div class="log-table-wrap"><table class="log-table" id="table-${sid}-replen" style="display:none">
+          <thead><tr><th>Date/Time (UTC)</th><th>Technician</th><th>Unit</th><th>Tanker/Ref</th><th>Before (L)</th><th>Added (L)</th><th>After (L)</th><th>Invoice No.</th><th>Notes</th></tr></thead>
+          <tbody id="tbody-${sid}-replen"></tbody>
+        </table></div>
+      </div>
+      <div class="card-log-pane" id="pane-${sid}-fuelchk">
+        <div class="log-top"><h4>FRM-GO-402 &mdash; FUEL SAMPLE RECORD</h4>
+          <div class="log-top-btns">
+            <button class="btn-export form" onclick="openPrint402(${sid})">&#x1F5B6; PRINT MONTH</button>
+            <button class="btn-export" onclick="exportCSV(${sid},'fuelchk')">&#x2193; CSV</button>
+          </div>
+        </div>
+        <div class="log-empty" id="empty-${sid}-fuelchk">NO FUEL CHECKS RECORDED</div>
+        <div class="log-table-wrap"><table class="log-table" id="table-${sid}-fuelchk" style="display:none">
+          <thead><tr><th>Date</th><th>Type</th><th>Visual Insp. Sign</th><th>Sample Check By</th><th>Unit</th><th>Capsule Expiry</th><th>SUMP Drain</th><th>Filter Drain Port</th><th>Hose End</th><th>Time Complete</th><th>Meter (L)</th><th>Drained</th><th>Recycled</th><th>Net Loss</th><th>Bowser After (L)</th><th>Observations</th><th>Notes</th></tr></thead>
+          <tbody id="tbody-${sid}-fuelchk"></tbody>
+        </table></div>
+      </div>
+    </div>`;
+  return div;
+}
+
+/* ============================================================
+   EXPANDABLE AIRCRAFT REFUEL LIST
+   ============================================================ */
+function toggleRefuelStrip(sid){document.getElementById(`rstrip-${sid}`).classList.toggle('open');}
+function setRefuelStrip(sid,open){document.getElementById(`rstrip-${sid}`).classList.toggle('open',!!open);}
+function renderRefuelStrip(sid){
+  const data=logs[sid].uplift;
+  const body=document.getElementById(`rstrip-body-${sid}`);
+  const count=document.getElementById(`rstrip-count-${sid}`);
+  if(!body) return;
+  count.textContent=data.length;
+  if(!data.length){body.innerHTML='<div class="refuel-strip-empty">NO REFUELS RECORDED</div>';return;}
+  body.innerHTML=[...data].reverse().map(r=>{
+    const ac=r.bowserAfter===0?'var(--red)':r.bowserAfter<LOW_FUEL_THRESHOLD?'var(--amber)':'var(--green)';
+    return `<div class="refuel-item">
+      <div class="ri-time">${esc(r.datetime)}</div>
+      <div class="ri-reg">${esc(r.reg)}</div>
+      <div class="ri-who">${esc(r.atype||'—')} &middot; ${esc(r.pilot)} (${esc(r.unit||'—')})</div>
+      <div class="ri-qty">${r.qty.toLocaleString()} L</div>
+      <div class="ri-after" style="color:${ac}">&rarr; ${r.bowserAfter.toLocaleString()} L</div>
+    </div>`;
+  }).join('');
+}
+
+// Open log section for the right tab when an action button is pressed
+function openLogsTo(sid, type){
+  const logsEl=document.getElementById(`logs-${sid}`);
+  logsEl.classList.add('open');
+  const card=document.getElementById(`base-card-${sid}`);
+  card.querySelectorAll('.card-log-tab').forEach(t=>t.classList.remove('active'));
+  card.querySelectorAll('.card-log-pane').forEach(p=>p.classList.remove('active'));
+  document.getElementById(`tab-${sid}-${type}`).classList.add('active');
+  document.getElementById(`pane-${sid}-${type}`).classList.add('active');
+}
+
+function switchLog(e,sid,type){
+  e.stopPropagation();
+  const card=document.getElementById(`base-card-${sid}`);
+  card.querySelectorAll('.card-log-tab').forEach(t=>t.classList.remove('active'));
+  card.querySelectorAll('.card-log-pane').forEach(p=>p.classList.remove('active'));
+  document.getElementById(`tab-${sid}-${type}`).classList.add('active');
+  document.getElementById(`pane-${sid}-${type}`).classList.add('active');
+}
+
+// Fuel check badge logic
+function updateFuelChkBadge(sid){
+  const badge=document.getElementById(`base-${sid}-fuelchk-badge`);
+  const tab=document.getElementById(`tab-${sid}-fuelchk`);
+  if(!badge) return;
+  const wasActive=tab&&tab.classList.contains('active');
+  const checks=logs[sid].fuelchk;
+  const setTab=cls=>{if(tab){tab.className='card-log-tab '+cls;if(wasActive)tab.classList.add('active');}};
+  if(!checks.length){
+    badge.className='fuelchk-badge never';
+    badge.textContent='FUEL CHECK DUE';
+    setTab('fuelchk-overdue');
+    return;
+  }
+  const last=checks[checks.length-1].datetime;
+  const parts=last.match(/(\d+)\/(\d+)\/(\d+) (\d+):(\d+)Z/);
+  if(!parts) return;
+  const lastDate=new Date(Date.UTC(parseInt(parts[3]),parseInt(parts[2])-1,parseInt(parts[1]),parseInt(parts[4]),parseInt(parts[5])));
+  const hoursAgo=(Date.now()-lastDate.getTime())/3600000;
+  if(hoursAgo<=24){
+    badge.className='fuelchk-badge ok';
+    badge.textContent='FUEL CHECK CURRENT';
+    setTab('fuelchk-ok');
+  } else {
+    badge.className='fuelchk-badge overdue';
+    badge.textContent='FUEL CHECK OVERDUE';
+    setTab('fuelchk-overdue');
+  }
+}
+
+// Update base card fuel display
+function updateBaseCard(sid){
+  const site=SITES[sid];
+  const pct=site.quantity/site.maxCapacity;
+  const fc=site.status==='unserviceable'?'unavailable':pct>0.4?'high':pct>0.15?'medium':'low';
+  const bc=fc==='unavailable'?'low':fc;
+  const qEl=document.getElementById(`base-${sid}-qty`);
+  if(!qEl) return;
+  qEl.textContent=site.status==='unserviceable'?'N/A':site.quantity.toLocaleString();
+  qEl.className=`fuel-qty-display ${fc}`;
+  document.getElementById(`base-${sid}-bar`).style.width=site.status==='unserviceable'?'0':`${Math.round(pct*100)}%`;
+  document.getElementById(`base-${sid}-bar`).className=`fuel-bar ${bc}`;
+  document.getElementById(`base-${sid}-dot`).className=`status-dot ${site.status}`;
+  const tag=document.getElementById(`base-${sid}-tag`);
+  tag.className=`status-badge ${site.status}`;
+  tag.textContent=site.status.toUpperCase();
+  const upliftBtn=document.getElementById(`base-${sid}-uplift-btn`);
+  if(upliftBtn) upliftBtn.disabled=site.status==='unserviceable';
+  updateFuelChkBadge(sid);
+  checkLowFuel(sid,false);
+}
+
+/* ============================================================
+   LOW FUEL (< 1000 L) TEXT ALERT
+   ============================================================ */
+function isLowFuel(sid){return SITES[sid].quantity<LOW_FUEL_THRESHOLD;}
+
+function updateLowFuelBanner(sid){
+  const banner=document.getElementById(`base-${sid}-lowfuel`);
+  const card=document.getElementById(`base-card-${sid}`);
+  if(!banner) return;
+  const low=isLowFuel(sid);
+  banner.classList.toggle('show',low);
+  if(card) card.classList.toggle('low-fuel',low);
+  if(low){
+    document.getElementById(`base-${sid}-lowfuel-text`).innerHTML=
+      `&#x26A0; BOWSER BELOW ${LOW_FUEL_THRESHOLD.toLocaleString()} L &mdash; ${SITES[sid].quantity.toLocaleString()} L REMAINING. REPLENISHMENT REQUIRED.`;
+  }
+}
+
+function lowFuelMessage(sid){
+  const s=SITES[sid];
+  return `ESAFN LOW FUEL ALERT\n`+
+         `${s.name} (${s.icao})\n`+
+         `Bowser: ${s.quantity.toLocaleString()} L - below ${LOW_FUEL_THRESHOLD.toLocaleString()} L threshold\n`+
+         `Status: ${s.status.toUpperCase()}\n`+
+         `Logged ${nowUTC()} by ${currentUnit||'-'}\n`+
+         `Replenishment required.`;
+}
+
+function openLowFuel(sid){
+  lowFuelSid=sid;
+  const s=SITES[sid];
+  document.getElementById('lowfuel-site-lbl').textContent=`${s.name} (${s.icao}) — ${s.quantity.toLocaleString()}L remaining`;
+  document.getElementById('lf-phone').value=s.alertPhone||DEFAULT_ALERT_PHONE;
+  document.getElementById('lf-preview').textContent=lowFuelMessage(sid);
+  rebuildSmsLink();
+  document.getElementById('modal-lowfuel').classList.add('open');
+}
+
+function rebuildSmsLink(){
+  if(lowFuelSid==null) return;
+  const raw=document.getElementById('lf-phone').value.trim();
+  const num=raw.replace(/[^\d+]/g,'');
+  SITES[lowFuelSid].alertPhone=raw;
+  const body=encodeURIComponent(lowFuelMessage(lowFuelSid));
+  // "?&body=" is the form that works across both iOS and Android
+  document.getElementById('lf-sms-link').setAttribute('href',`sms:${num}?&body=${body}`);
+}
+
+function copySms(){
+  const txt=lowFuelMessage(lowFuelSid);
+  const done=()=>showToast('✓ MESSAGE COPIED');
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(txt).then(done).catch(()=>fallbackCopy(txt,done));
+  } else fallbackCopy(txt,done);
+}
+function fallbackCopy(txt,done){
+  const ta=document.createElement('textarea');ta.value=txt;ta.style.position='fixed';ta.style.opacity='0';
+  document.body.appendChild(ta);ta.select();
+  try{document.execCommand('copy');done();}catch(e){showToast('⚠ COPY FAILED',true);}
+  document.body.removeChild(ta);
+}
+
+// Fire the alert once per crossing of the threshold
+function checkLowFuel(sid,own){
+  updateLowFuelBanner(sid);
+  if(isLowFuel(sid)){
+    if(!alertedSites[sid]){
+      alertedSites[sid]=true;
+      if(own)setTimeout(()=>openLowFuel(sid),600);
+    }
+  } else {
+    alertedSites[sid]=false;
+  }
+}
+
+/* ============================================================
+   AIRCRAFT REFUEL
+   ============================================================ */
+function openUplift(sid){
+  currentSite=SITES[sid];
+  document.getElementById('uplift-site-lbl').textContent=`${currentSite.name} (${currentSite.icao}) — ${currentSite.quantity.toLocaleString()}L available`;
+  ['u-reg','u-type','u-pilot','u-notes'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('u-unit').value=currentUnit||'';
+  document.getElementById('u-cstart').value='';document.getElementById('u-cend').value='';
+  document.getElementById('u-qty-calc').textContent='— L';document.getElementById('u-qty-calc').style.color='var(--muted)';
+  document.getElementById('u-rem-calc').textContent=`${currentSite.quantity.toLocaleString()} L`;document.getElementById('u-rem-calc').style.color='var(--green)';
+  document.getElementById('modal-uplift').classList.add('open');
+}
+function calcUplift(){
+  const cs=parseFloat(document.getElementById('u-cstart').value);
+  const ce=parseFloat(document.getElementById('u-cend').value);
+  const qEl=document.getElementById('u-qty-calc'),rEl=document.getElementById('u-rem-calc');
+  if(!isNaN(cs)&&!isNaN(ce)&&ce>cs){
+    const qty=ce-cs;qEl.textContent=`${qty.toLocaleString()} L`;qEl.style.color='var(--accent)';
+    if(currentSite){const rem=currentSite.quantity-qty;rEl.textContent=rem>=0?`${rem.toLocaleString()} L`:'⚠ EXCEEDS AVAILABLE';rEl.style.color=rem<0?'var(--red)':rem<LOW_FUEL_THRESHOLD?'var(--amber)':'var(--green)';}
+  } else {qEl.textContent='— L';qEl.style.color='var(--muted)';if(currentSite){rEl.textContent=`${currentSite.quantity.toLocaleString()} L`;rEl.style.color='var(--green)';}}
+}
+async function confirmUplift(){
+  const rec={
+    reg:document.getElementById('u-reg').value.trim().toUpperCase(),
+    atype:document.getElementById('u-type').value.trim(),
+    pilot:document.getElementById('u-pilot').value.trim(),
+    unit:document.getElementById('u-unit').value.trim(),
+    cstart:document.getElementById('u-cstart').value,
+    cend:document.getElementById('u-cend').value,
+    notes:document.getElementById('u-notes').value.trim()
+  };
+  if(!rec.reg||!rec.pilot||rec.cstart===''||rec.cend===''){showToast('⚠ COMPLETE ALL REQUIRED FIELDS',true);return;}
+  const sid=currentSite.id;
+  if(!await submitRecord('uplift',sid,rec))return;
+  closeModal('modal-uplift');
+  setRefuelStrip(sid,true);openLogsTo(sid,'uplift');
+  showToast('✓ REFUEL RECORDED');
+  checkLowFuel(sid,true);
+}
+
+/* ============================================================
+   REPLENISHMENT (REBULK)
+   ============================================================ */
+function openReplen(sid){
+  currentSite=SITES[sid];
+  document.getElementById('replen-site-lbl').textContent=`${currentSite.name} (${currentSite.icao}) — ${currentSite.quantity.toLocaleString()}L current`;
+  ['r-name','r-tanker','r-batch','r-notes'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('r-unit').value=currentUnit||'';
+  document.getElementById('r-before').value=currentSite.quantity;document.getElementById('r-added').value='';
+  document.getElementById('r-after-calc').textContent=`${currentSite.quantity.toLocaleString()} L`;document.getElementById('r-after-calc').style.color='var(--blue)';
+  document.getElementById('modal-replen').classList.add('open');
+}
+function calcReplen(){
+  const before=parseFloat(document.getElementById('r-before').value)||0;
+  const added=parseFloat(document.getElementById('r-added').value)||0;
+  const after=before+added;const el=document.getElementById('r-after-calc');
+  if(added>0){const cap=currentSite?currentSite.maxCapacity:3000;el.textContent=`${after.toLocaleString()} L${after>cap?' ⚠ OVER CAPACITY':''}`;el.style.color=after>cap?'var(--red)':'var(--blue)';}
+  else{el.textContent=`${before.toLocaleString()} L`;el.style.color='var(--muted)';}
+}
+async function confirmReplen(){
+  const rec={
+    name:document.getElementById('r-name').value.trim(),
+    unit:document.getElementById('r-unit').value.trim(),
+    tanker:document.getElementById('r-tanker').value.trim(),
+    added:document.getElementById('r-added').value,
+    batch:document.getElementById('r-batch').value.trim(),
+    notes:document.getElementById('r-notes').value.trim()
+  };
+  if(!rec.name||rec.added===''||parseFloat(rec.added)<=0){showToast('⚠ COMPLETE ALL REQUIRED FIELDS',true);return;}
+  const sid=currentSite.id;
+  if(!await submitRecord('replen',sid,rec))return;
+  closeModal('modal-replen');openLogsTo(sid,'replen');
+  showToast('✓ REPLENISHMENT RECORDED');
+  checkLowFuel(sid,true);
+  const log=logs[sid].replen,last=log[log.length-1];
+  promptRebulkCheck(sid,{name:rec.name,unit:rec.unit,tanker:rec.tanker,added:last.added,after:last.bowserAfter});
+}
+
+// After a rebulk, FRM-GO-402 sampling is required once the fuel has settled
+function promptRebulkCheck(sid,d){
+  pendingRebulkSid=sid;
+  document.getElementById('rebulk-site-lbl').textContent=`${SITES[sid].name} (${SITES[sid].icao}) — ${d.added.toLocaleString()}L added`;
+  document.getElementById('rebulk-hint').innerHTML=
+    `FRM-GO-402 sampling is required after receipt of fuel into the installation, once the fuel has settled &mdash; minimum <b>10 minutes</b> from an airfield bowser, <b>1 hour</b> from a bridger type vehicle, before first issue to an aircraft.`;
+  document.getElementById('rebulk-detail').textContent=
+    `Tanker / Ref: ${d.tanker||'—'}\nQuantity added: ${d.added.toLocaleString()} L\nBowser now: ${d.after.toLocaleString()} L\nReceived by: ${d.name} (${d.unit||'—'})`;
+  setTimeout(()=>document.getElementById('modal-rebulk').classList.add('open'),400);
+}
+function startRebulkCheck(){
+  const sid=pendingRebulkSid;
+  closeModal('modal-rebulk');
+  openFuelChk(sid,'Rebulk');
+}
+
+/* ============================================================
+   FRM-GO-402 FUEL INSTALLATION CHECK
+   ============================================================ */
+function setInspType(t){
+  inspType=t;
+  document.getElementById('seg-daily').classList.toggle('on',t==='Daily');
+  document.getElementById('seg-rebulk').classList.toggle('on',t==='Rebulk');
+  document.getElementById('insp-hint').innerHTML = t==='Daily'
+    ? 'Before first use of the fuel installation each day, for in-use fuel installations.'
+    : 'After receipt of fuel into the fuel installation, once the settling period has elapsed &mdash; <b>10 minutes</b> from an airfield bowser, <b>1 hour</b> from a bridger type vehicle.';
+}
+function styleResult(sel){
+  sel.classList.remove('res-pass','res-fail');
+  if(sel.value==='CB+CWD PASS') sel.classList.add('res-pass');
+  else if(sel.value!=='N/A') sel.classList.add('res-fail');
+}
+
+function openFuelChk(sid,type){
+  currentSite=SITES[sid];
+  document.getElementById('fuelchk-site-lbl').textContent=`${currentSite.name} (${currentSite.icao}) — ${currentSite.quantity.toLocaleString()}L current`;
+  setInspType(type||'Daily');
+  document.getElementById('fc-location').value=`${currentSite.name} (${currentSite.icao})`;
+  document.getElementById('fc-grade').value=currentSite.fuelGrade||DEFAULT_FUEL_GRADE;
+  document.getElementById('fc-tank').value=currentSite.tankSerial||'';
+  ['fc-visual-sign','fc-name','fc-result','fc-notes'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('fc-unit').value=currentUnit||'';
+  document.getElementById('fc-capsule-exp').value=currentSite.capsuleExpiry||'';
+  document.getElementById('fc-time-complete').value=timeUTC();
+  ['fc-sump','fc-filter','fc-hose'].forEach(id=>{const s=document.getElementById(id);s.value='CB+CWD PASS';styleResult(s);});
+  ['fc-cstart','fc-cend','fc-drained','fc-recycled'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('fc-before').value=currentSite.quantity;
+  document.getElementById('fc-meter-total').textContent='— L';document.getElementById('fc-meter-total').style.color='var(--muted)';
+  document.getElementById('fc-net-val').textContent='— L';document.getElementById('fc-after-val').textContent='— L';
+  document.getElementById('rc-net').className='result-card';document.getElementById('rc-after').className='result-card';
+  document.getElementById('modal-fuelchk').classList.add('open');
+}
+
+function calcFuelChk(){
+  const cs=parseFloat(document.getElementById('fc-cstart').value);
+  const ce=parseFloat(document.getElementById('fc-cend').value);
+  const mEl=document.getElementById('fc-meter-total');
+  if(!isNaN(cs)&&!isNaN(ce)&&ce>cs){mEl.textContent=`${(ce-cs).toLocaleString()} L`;mEl.style.color='var(--purple)';}
+  else{mEl.textContent='— L';mEl.style.color='var(--muted)';}
+  const before=parseFloat(document.getElementById('fc-before').value)||0;
+  const drained=parseFloat(document.getElementById('fc-drained').value)||0;
+  const recycled=parseFloat(document.getElementById('fc-recycled').value)||0;
+  const netLoss=drained-recycled;const after=Math.max(0,before-Math.max(0,netLoss));
+  const nEl=document.getElementById('fc-net-val'),aEl=document.getElementById('fc-after-val');
+  if(drained>0||recycled>0){
+    nEl.textContent=`${Math.max(0,netLoss).toLocaleString()} L`;nEl.style.color=netLoss>100?'var(--amber)':'var(--green)';
+    document.getElementById('rc-net').className='result-card'+(netLoss>100?' warn':'');
+    aEl.textContent=`${after.toLocaleString()} L`;
+    aEl.style.color=after<LOW_FUEL_THRESHOLD?'var(--red)':'var(--green)';
+    document.getElementById('rc-after').className='result-card'+(after<LOW_FUEL_THRESHOLD?' bad':'');
+  }
+}
+
+async function confirmFuelChk(){
+  const capsuleRaw=document.getElementById('fc-capsule-exp').value;
+  const rec={
+    inspType:inspType,
+    location:document.getElementById('fc-location').value.trim(),
+    grade:document.getElementById('fc-grade').value.trim(),
+    tank:document.getElementById('fc-tank').value.trim(),
+    visualSign:document.getElementById('fc-visual-sign').value.trim(),
+    name:document.getElementById('fc-name').value.trim(),
+    unit:document.getElementById('fc-unit').value.trim(),
+    capsuleExpRaw:capsuleRaw,
+    capsuleExp:capsuleRaw?capsuleRaw.split('-').reverse().join('/'):'',
+    sump:document.getElementById('fc-sump').value,
+    filter:document.getElementById('fc-filter').value,
+    hose:document.getElementById('fc-hose').value,
+    timeComplete:document.getElementById('fc-time-complete').value,
+    cstart:document.getElementById('fc-cstart').value,
+    cend:document.getElementById('fc-cend').value,
+    drained:document.getElementById('fc-drained').value,
+    recycled:document.getElementById('fc-recycled').value,
+    result:document.getElementById('fc-result').value.trim(),
+    notes:document.getElementById('fc-notes').value.trim()
+  };
+  if(!rec.visualSign||!rec.name||!rec.timeComplete){showToast('⚠ COMPLETE ALL REQUIRED FIELDS',true);return;}
+  const sid=currentSite.id;
+  if(!await submitRecord('fuelchk',sid,rec))return;
+  closeModal('modal-fuelchk');openLogsTo(sid,'fuelchk');
+  const log=logs[sid].fuelchk,anyFail=log[log.length-1].anyFail;
+  showToast(anyFail?'⚠ SAMPLE FAILURE — INSTALLATION SET UNSERVICEABLE':'✓ FRM-GO-402 RECORDED',anyFail);
+  checkLowFuel(sid,true);
+}
+
+function closeModal(id){document.getElementById(id).classList.remove('open');if(id!=='modal-lowfuel'&&id!=='modal-rebulk')currentSite=null;}
+
+/* ============================================================
+   LOGS
+   ============================================================ */
+function resCell(v){
+  if(v==='CB+CWD PASS') return `<td class="pass">${esc(v)}</td>`;
+  if(v==='N/A') return `<td style="color:var(--muted)">${esc(v)}</td>`;
+  return `<td class="fail">${esc(v)}</td>`;
+}
+
+function renderLog(sid,type){
+  const data=logs[sid][type];
+  const empty=document.getElementById(`empty-${sid}-${type}`);
+  const table=document.getElementById(`table-${sid}-${type}`);
+  const tbody=document.getElementById(`tbody-${sid}-${type}`);
+  if(!data.length){empty.style.display='block';table.style.display='none';return;}
+  empty.style.display='none';table.style.display='table';
+  if(type==='uplift'){
+    tbody.innerHTML=[...data].reverse().map(r=>{
+      const ac=r.bowserAfter===0?'var(--red)':r.bowserAfter<LOW_FUEL_THRESHOLD?'var(--amber)':'var(--green)';
+      return `<tr><td>${esc(r.datetime)}</td><td style="color:var(--accent)">${esc(r.reg)}</td><td>${esc(r.atype||'—')}</td><td>${esc(r.pilot)}</td><td>${esc(r.unit)}</td><td>${r.cstart.toLocaleString()}</td><td>${r.cend.toLocaleString()}</td><td style="color:var(--accent);font-weight:bold">${r.qty.toLocaleString()}</td><td style="color:${ac}">${r.bowserAfter.toLocaleString()}</td><td style="color:#fff">${esc(r.notes||'—')}</td></tr>`;
+    }).join('');
+  } else if(type==='replen'){
+    tbody.innerHTML=[...data].reverse().map(r=>{
+      const ac=r.bowserAfter===0?'var(--red)':r.bowserAfter<LOW_FUEL_THRESHOLD?'var(--amber)':'var(--green)';
+      return `<tr><td>${esc(r.datetime)}</td><td>${esc(r.name)}</td><td>${esc(r.unit)}</td><td style="color:var(--blue)">${esc(r.tanker||'—')}</td><td>${r.before.toLocaleString()}</td><td style="color:var(--blue);font-weight:bold">+${r.added.toLocaleString()}</td><td style="color:${ac}">${r.bowserAfter.toLocaleString()}</td><td>${esc(r.batch||'—')}</td><td style="color:#fff">${esc(r.notes||'—')}</td></tr>`;
+    }).join('');
+  } else {
+    tbody.innerHTML=[...data].reverse().map(r=>{
+      const ac=r.bowserAfter===0?'var(--red)':r.bowserAfter<LOW_FUEL_THRESHOLD?'var(--amber)':'var(--green)';
+      return `<tr>`+
+        `<td>${esc(r.date)}</td>`+
+        `<td style="color:var(--purple)">${esc(r.inspType)}</td>`+
+        `<td>${esc(r.visualSign)}</td>`+
+        `<td>${esc(r.name)}</td>`+
+        `<td>${esc(r.unit)}</td>`+
+        `<td>${esc(r.capsuleExp||'—')}</td>`+
+        resCell(r.sump)+resCell(r.filter)+resCell(r.hose)+
+        `<td>${esc(r.timeComplete)}</td>`+
+        `<td style="color:var(--purple)">${r.meterTotal.toLocaleString()}</td>`+
+        `<td>${r.drained.toLocaleString()}</td>`+
+        `<td style="color:var(--green)">${r.recycled.toLocaleString()}</td>`+
+        `<td style="color:${r.netLoss>100?'var(--amber)':'var(--green)'}">${r.netLoss.toLocaleString()}</td>`+
+        `<td style="color:${ac}">${r.bowserAfter.toLocaleString()}</td>`+
+        `<td style="color:#fff;max-width:140px;word-break:break-word">${esc(r.result||'—')}</td>`+
+        `<td style="color:#fff">${esc(r.notes||'—')}</td></tr>`;
+    }).join('');
+  }
+}
+
+/* ============================================================
+   CSV EXPORT
+   ============================================================ */
+function csvCell(v){return `"${String(v==null?'':v).replace(/"/g,'""')}"`;}
+
+function exportCSV(sid,type){
+  const data=logs[sid][type];const siteName=SITES[sid].name;
+  if(!data.length){showToast('NO RECORDS TO EXPORT',true);return;}
+  let header,rows;
+  if(type==='uplift'){
+    header='Date/Time (UTC),Aircraft Reg,Aircraft Type,Pilot,Unit,Counter Start (L),Counter End (L),Qty Refuelled (L),Bowser After (L),Notes\n';
+    rows=data.map(r=>[r.datetime,r.reg,r.atype,r.pilot,r.unit,r.cstart,r.cend,r.qty,r.bowserAfter,r.notes].map(csvCell).join(',')).join('\n');
+  } else if(type==='replen'){
+    header='Date/Time (UTC),Technician,Unit,Tanker/Ref,Bowser Before (L),Added (L),Bowser After (L),Invoice No.,Notes\n';
+    rows=data.map(r=>[r.datetime,r.name,r.unit,r.tanker,r.before,r.added,r.bowserAfter,r.batch,r.notes].map(csvCell).join(',')).join('\n');
+  } else {
+    header='Date,Time Sample Checks Complete,Inspection Type,Location,Fuel Grade,Vehicle Reg or Tank Serial No,Daily Visual Inspection Complete - Sign,Name of Person Conducting Sample Check,Unit,Expiry Date of Shell Capsules Tube,SUMP Drain Sample Result,Filter Drain Port Sample Result,Hose End Sample Result,Counter Start (L),Counter End (L),Meter Total (L),Bowser Before (L),Drained (L),Recycled (L),Net Loss (L),Bowser After (L),Observations,Notes\n';
+    rows=data.map(r=>[r.date,r.timeComplete,r.inspType,r.location,r.grade,r.tank,r.visualSign,r.name,r.unit,r.capsuleExp,r.sump,r.filter,r.hose,r.cstart,r.cend,r.meterTotal,r.before,r.drained,r.recycled,r.netLoss,r.bowserAfter,r.result,r.notes].map(csvCell).join(',')).join('\n');
+  }
+  const blob=new Blob([header+rows],{type:'text/csv'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download=`ESAFN_${siteName.replace(/ /g,'_')}_${type==='fuelchk'?'FRM-GO-402':type}_${new Date().toISOString().slice(0,10)}.csv`;a.click();
+  showToast('✓ CSV EXPORTED');
+}
+
+/* ============================================================
+   PRINTABLE FRM-GO-402
+   ============================================================ */
+// --- date helpers for month filtering -------------------------------
+function recDateStr(r){return (r.date||r.datetime||'').slice(0,10);}          // DD/MM/YYYY
+function recYM(r){const p=recDateStr(r).split('/');return p.length===3?`${p[2]}-${p[1]}`:'';}
+function recTimeStr(r){if(r.timeComplete)return r.timeComplete;const m=(r.datetime||'').match(/(\d{2}:\d{2})Z/);return m?m[1]:'';}
+function sortKey(r){const p=recDateStr(r).split('/');return `${p[2]||''}${p[1]||''}${p[0]||''}${recTimeStr(r).replace(':','')}`;}
+
+function openPrint402(sid){
+  printSid=sid;
+  const s=SITES[sid];
+  document.getElementById('print-site-lbl').textContent=`${s.name} (${s.icao})`;
+  const n=new Date();
+  const mSel=document.getElementById('pr-month'),ySel=document.getElementById('pr-year');
+  mSel.innerHTML=MONTH_NAMES.map((m,i)=>`<option value="${pad(i+1)}">${m}</option>`).join('');
+  mSel.value=pad(n.getUTCMonth()+1);
+  let yOpts='';for(let y=n.getUTCFullYear()-2;y<=n.getUTCFullYear()+1;y++)yOpts+=`<option value="${y}">${y}</option>`;
+  ySel.innerHTML=yOpts;ySel.value=n.getUTCFullYear();
+  updatePrintCounts();
+  document.getElementById('modal-print').classList.add('open');
+}
+function selectedYM(){return `${document.getElementById('pr-year').value}-${document.getElementById('pr-month').value}`;}
+function monthRecords(sid,ym){
+  return {
+    checks : logs[sid].fuelchk.filter(r=>recYM(r)===ym),
+    refuels: logs[sid].uplift .filter(r=>recYM(r)===ym),
+    rebulks: logs[sid].replen .filter(r=>recYM(r)===ym)
+  };
+}
+function updatePrintCounts(){
+  if(printSid==null)return;
+  const r=monthRecords(printSid,selectedYM());
+  const total=r.checks.length+r.refuels.length+r.rebulks.length;
+  document.getElementById('pr-counts').textContent=
+    `Fuel checks       ${r.checks.length}\n`+
+    `Aircraft refuels  ${r.refuels.length}\n`+
+    `Rebulks           ${r.rebulks.length}\n`+
+    `${'-'.repeat(28)}\n`+
+    `Total entries     ${total}`+(total?'':'\n\nBlank form will be produced.');
+}
+function doPrint402(){const sid=printSid,ym=selectedYM();closeModal('modal-print');buildForm402(sid,ym);}
+
+function buildForm402(sid,ym){
+  const site=SITES[sid];
+  const {checks,refuels,rebulks}=monthRecords(sid,ym);
+  const [yy,mm]=ym.split('-');
+  const periodLabel=`${MONTH_NAMES[parseInt(mm,10)-1]} ${yy}`;
+  const last=checks.length?checks[checks.length-1]:null;
+
+  const MIN_ROWS=FORM_DAILY_ROWS+FORM_REBULK_ROWS;   // 31 + 10 = 41
+  const blanks=Math.max(0,MIN_ROWS-checks.length);
+  const cell=v=>{
+    const s=esc(v==null||v===''?'':v);
+    if(v==='CB+CWD PASS') return `<td class="pass">${s}</td>`;
+    if(v&&/fail/i.test(v)) return `<td class="fail">${s}</td>`;
+    return `<td>${s}</td>`;
+  };
+  const rows=checks.map(r=>`<tr>
+      <td>${esc(r.date)}<div class="sub">${esc(r.inspType)}</div></td>
+      <td>${esc(r.visualSign)}</td>
+      <td>${esc(r.name)}${r.unit?`<div class="sub">${esc(r.unit)}</div>`:''}</td>
+      <td>${esc(r.capsuleExp||'')}</td>
+      ${cell(r.sump)}${cell(r.filter)}${cell(r.hose)}
+      <td>${esc(r.timeComplete)}</td>
+    </tr>`).join('')
+    + Array.from({length:blanks}).map(()=>'<tr>'+'<td>&nbsp;</td>'.repeat(8)+'</tr>').join('');
+
+  /* ---- Sheet 2: monthly reconciliation ledger ---- */
+  const num=v=>(v===''||v==null||isNaN(v))?'':Number(v).toLocaleString();
+  const ledger=[
+    ...refuels.map(r=>({k:sortKey(r),date:recDateStr(r),time:recTimeStr(r),type:'AIRCRAFT REFUEL',
+      ref:r.reg,detail:r.atype||'',person:r.pilot,unit:r.unit||'',cs:r.cstart,ce:r.cend,
+      inn:'',out:r.qty,disp:'',after:r.bowserAfter,inv:'',note:r.notes||''})),
+    ...rebulks.map(r=>({k:sortKey(r),date:recDateStr(r),time:recTimeStr(r),type:'REBULK',
+      ref:r.tanker||'',detail:'',person:r.name,unit:r.unit||'',cs:'',ce:'',
+      inn:r.added,out:'',disp:'',after:r.bowserAfter,inv:r.batch||'',note:r.notes||''})),
+    ...checks.map(r=>({k:sortKey(r),date:recDateStr(r),time:recTimeStr(r),type:'FUEL CHECK &ndash; '+esc(r.inspType),
+      ref:r.tank||'',detail:[r.sump,r.filter,r.hose].join(' / '),person:r.name,unit:r.unit||'',cs:r.cstart,ce:r.cend,
+      inn:'',out:'',disp:r.netLoss,after:r.bowserAfter,inv:'',note:r.result||r.notes||''}))
+  ].sort((a,b)=>a.k<b.k?-1:a.k>b.k?1:0);
+
+  const ledgerRows=ledger.map(e=>{
+    const fail=/fail/i.test(e.detail);
+    return `<tr>
+      <td>${esc(e.date)}</td><td>${esc(e.time)}</td>
+      <td class="lt">${e.type}</td>
+      <td>${esc(e.ref)}</td>
+      <td class="${fail?'fail':''}" style="font-size:7.5px">${esc(e.detail)}</td>
+      <td>${esc(e.person)}</td><td>${esc(e.unit)}</td>
+      <td>${num(e.cs)}</td><td>${num(e.ce)}</td>
+      <td class="in">${num(e.inn)}</td><td class="out">${num(e.out)}</td><td>${num(e.disp)}</td>
+      <td><b>${num(e.after)}</b></td>
+      <td>${esc(e.inv)}</td>
+      <td style="text-align:left;font-size:7.5px">${esc(e.note)}</td>
+    </tr>`;
+  }).join('')
+   + Array.from({length:Math.max(0,LEDGER_ROWS-ledger.length)}).map(()=>'<tr>'+'<td>&nbsp;</td>'.repeat(15)+'</tr>').join('');
+
+  /* ---- Balance reconciliation ---- */
+  const chron=[
+    ...refuels.map(r=>({k:sortKey(r),before:r.bowserAfter+r.qty,after:r.bowserAfter})),
+    ...rebulks.map(r=>({k:sortKey(r),before:r.before,after:r.bowserAfter})),
+    ...checks .map(r=>({k:sortKey(r),before:r.before,after:r.bowserAfter}))
+  ].sort((a,b)=>a.k<b.k?-1:a.k>b.k?1:0);
+  const opening = chron.length?chron[0].before:0;
+  const closing = chron.length?chron[chron.length-1].after:0;
+  const totIn   = rebulks.reduce((s,r)=>s+r.added,0);
+  const totOut  = refuels.reduce((s,r)=>s+r.qty,0);
+  const totDisp = checks .reduce((s,r)=>s+r.netLoss,0);
+  const expected= opening+totIn-totOut-totDisp;
+  const variance= closing-expected;
+  const invoices= rebulks.filter(r=>r.batch).map(r=>r.batch);
+  const failCount=checks.filter(r=>r.anyFail).length;
+
+  const html=`<!DOCTYPE html><html><head><meta charset="UTF-8"><title>FRM-GO-402 ${esc(periodLabel)} — ${esc(site.name)}</title>
+<style>
+@page{size:A4 landscape;margin:8mm;}
+@media print{@page{size:landscape;}}
+*{box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+body{font-family:Arial,Helvetica,sans-serif;color:#000;margin:0;font-size:11px;}
+table{border-collapse:collapse;width:100%;}
+thead{display:table-header-group;}
+tr{page-break-inside:avoid;}
+.hdr td{border:1.5px solid #000;padding:5px 10px;vertical-align:middle;}
+.brand{font-size:16px;font-weight:bold;letter-spacing:-0.5px;width:26%;}
+.brand span{color:#c8102e;}
+.company{font-size:13px;font-weight:bold;text-align:center;}
+.docref{font-size:13px;font-weight:bold;text-align:center;width:22%;}
+.doctitle{font-size:14px;font-weight:bold;text-align:center;padding:6px;}
+.period{text-align:center;font-size:12px;font-weight:bold;margin:8px 0 2px;letter-spacing:0.06em;}
+.meta{margin:8px 0 4px;font-size:11px;}
+.meta .val{border-bottom:1px dotted #000;padding:0 8px;font-weight:bold;display:inline-block;min-width:140px;}
+.notes{font-size:9px;margin:6px 0;}
+.notes ul{margin:1px 0 1px 16px;padding:0;}
+.cols{display:flex;gap:26px;}
+.settle{font-size:9px;margin:4px 0 6px;}
+.rec{margin-top:4px;}
+.rec th,.rec td{border:1px solid #000;padding:2px 4px;font-size:9px;text-align:center;vertical-align:middle;height:19px;}
+.rec th{font-weight:bold;background:#f2f2f2;font-size:8.5px;}
+.rec .sub{font-size:7.5px;color:#444;}
+.legend{font-size:9px;margin:6px 0 2px;}
+.legend .g{color:#0a7a3d;font-weight:bold;}
+.legend .r{color:#b00000;font-weight:bold;}
+td.pass{color:#0a7a3d;font-weight:bold;}
+td.fail{color:#b00000;font-weight:bold;}
+.foot{display:flex;justify-content:space-between;margin-top:8px;font-size:9px;}
+.sheet2{page-break-before:always;padding-top:4px;}
+.h2{font-size:14px;font-weight:bold;margin:4px 0 2px;}
+.h2sub{font-size:9px;margin-bottom:8px;color:#333;}
+.led th,.led td{border:1px solid #000;padding:2px 3px;font-size:8px;text-align:center;vertical-align:middle;height:17px;}
+.led th{background:#f2f2f2;font-weight:bold;font-size:7.5px;}
+.led .lt{font-size:7.5px;font-weight:bold;}
+.led .in{color:#0a3d7a;font-weight:bold;}
+.led .out{color:#8a5a00;font-weight:bold;}
+.recon{margin-top:10px;page-break-inside:avoid;display:flex;gap:14px;}
+.recon table{width:auto;}
+.recon th,.recon td{border:1px solid #000;padding:4px 10px;font-size:9.5px;text-align:right;}
+.recon th{background:#f2f2f2;text-align:left;font-weight:bold;}
+.recon .tot{font-weight:bold;background:#fafafa;}
+.ok{color:#0a7a3d;font-weight:bold;}
+.bad{color:#b00000;font-weight:bold;}
+.signoff{flex:1;border:1px solid #000;padding:8px 10px;font-size:9px;}
+.signoff .line{border-bottom:1px solid #000;height:20px;margin:4px 0 10px;}
+@media print{.noprint{display:none;}}
+.noprint{margin:10px 0;text-align:center;font-family:Arial;font-size:12px;}
+.noprint button{padding:10px 22px;font-size:14px;cursor:pointer;}
+.noprint em{display:block;margin-top:6px;color:#555;font-size:11px;}
+</style></head><body>
+<div class="noprint">
+  <button onclick="window.print()">PRINT / SAVE AS PDF</button>
+  <em>Set up for A4 landscape. If your print dialog shows Portrait, switch it to Landscape.</em>
+</div>
+
+<table class="hdr">
+  <tr>
+    <td class="brand" rowspan="2">Gama Aviation<span>&#9646;&#9646;</span></td>
+    <td class="company">Gama Aviation (UK) Limited</td>
+    <td class="docref">FRM-GO-402</td>
+  </tr>
+  <tr><td class="doctitle" colspan="2">Fuel Installation Daily Check and Inspections Fuel Sample Record</td></tr>
+</table>
+
+<div class="period">MONTHLY RECORD &mdash; ${esc(periodLabel).toUpperCase()}</div>
+
+<div class="meta">
+  Location: <span class="val">${esc((last&&last.location)||site.name+' ('+site.icao+')')}</span>
+  &nbsp;&nbsp; FUEL Grade: <span class="val">${esc((last&&last.grade)||site.fuelGrade)}</span>
+  &nbsp;&nbsp; Vehicle Reg or Tank Serial No: <span class="val">${esc((last&&last.tank)||site.tankSerial||'')}</span>
+</div>
+
+<div class="notes">
+  Samples shall be taken at the following times:
+  <div class="cols">
+    <ul>
+      <li>Immediately before receipt into the fuel installation;</li>
+      <li>After receipt of fuel into the fuel installation (after settling time);</li>
+      <li>Before first use of fuel installation (each day for in-use fuel installations);</li>
+    </ul>
+    <ul>
+      <li>before the first delivery from the fuel installation;</li>
+      <li>After prolonger heavy rainfall or snow;</li>
+      <li>After de-fuelling &amp; after washing of the fuel installation.</li>
+    </ul>
+  </div>
+</div>
+<div class="settle">When a Gama operated Fuel Bowser or Trailer is replenished from an Airfield Bowser, the period between replenishment and sampling BEFORE first issue to an aircraft is a minimum of 10 minutes, when the replenishment is from a Bridger type vehicle the settling period is 1 hour.</div>
+
+<div class="legend">Fuel Samples: Record <span class="g">&lsquo;CB+CWD PASS&rsquo;</span> = Clear &amp; Bright visual and passed Shell capsule check. Add <span class="r">&lsquo;Fail CB and/or FAIL CWD&rsquo;</span> if failed third sample attempt at point.</div>
+
+<table class="rec">
+  <thead><tr>
+    <th style="width:11%">Date:</th>
+    <th style="width:14%">Daily Visual Inspection of Installation Complete &ndash; Sign:</th>
+    <th style="width:15%">Name of person conducting sample check:</th>
+    <th style="width:11%">Expiry Date of Shell Capsules tube:</th>
+    <th style="width:13%">SUMP Drain Sample Result:</th>
+    <th style="width:13%">Filter Drain Port Sample Result:</th>
+    <th style="width:13%">Hose End Sample Result:</th>
+    <th style="width:10%">Time Sample Checks Complete:</th>
+  </tr></thead>
+  <tbody>${rows}</tbody>
+</table>
+
+<div class="foot">
+  <div>Owner: NPGO &nbsp;&nbsp; Date: June 2025</div>
+  <div>Sheet 1 of 2 &nbsp;&nbsp; Revision: 0</div>
+</div>
+
+<!-- ================= SHEET 2 ================= -->
+<div class="sheet2">
+  <table class="hdr">
+    <tr>
+      <td class="brand" rowspan="2">Gama Aviation<span>&#9646;&#9646;</span></td>
+      <td class="company">Gama Aviation (UK) Limited</td>
+      <td class="docref">ESAFN SUPPLEMENTARY</td>
+    </tr>
+    <tr><td class="doctitle" colspan="2">Monthly Fuel Reconciliation Ledger &mdash; ${esc(site.name)} (${esc(site.icao)})</td></tr>
+  </table>
+
+  <div class="period">${esc(periodLabel).toUpperCase()}</div>
+  <div class="h2sub">Supplementary to FRM-GO-402 &mdash; not part of the controlled form. Every aircraft refuel, rebulk and fuel check for the period, in chronological order, for cross-checking against accounts, delivery receipts and aircraft refuel confirmations.</div>
+
+  <table class="led">
+    <thead><tr>
+      <th style="width:6%">Date</th>
+      <th style="width:4%">Time</th>
+      <th style="width:9%">Entry Type</th>
+      <th style="width:7%">Aircraft Reg /<br>Tanker Ref</th>
+      <th style="width:11%">Aircraft Type /<br>Sample Results</th>
+      <th style="width:9%">Pilot /<br>Technician</th>
+      <th style="width:5%">Unit</th>
+      <th style="width:5%">Ctr<br>Start</th>
+      <th style="width:5%">Ctr<br>End</th>
+      <th style="width:5%">Fuel In<br>(L)</th>
+      <th style="width:5%">Issued to<br>A/C (L)</th>
+      <th style="width:5%">Disposed<br>(L)</th>
+      <th style="width:6%">Bowser<br>After (L)</th>
+      <th style="width:7%">Invoice No.</th>
+      <th style="width:11%">Notes / Observations</th>
+    </tr></thead>
+    <tbody>${ledgerRows}</tbody>
+  </table>
+
+  <div class="recon">
+    <table>
+      <tr><th>Opening balance</th><td>${opening.toLocaleString()} L</td></tr>
+      <tr><th>Fuel received &mdash; rebulks (${rebulks.length})</th><td class="in">+ ${totIn.toLocaleString()} L</td></tr>
+      <tr><th>Issued to aircraft (${refuels.length})</th><td class="out">&minus; ${totOut.toLocaleString()} L</td></tr>
+      <tr><th>Disposed at fuel checks (${checks.length})</th><td>&minus; ${totDisp.toLocaleString()} L</td></tr>
+      <tr class="tot"><th>Expected closing balance</th><td>${expected.toLocaleString()} L</td></tr>
+      <tr class="tot"><th>Actual closing balance</th><td>${closing.toLocaleString()} L</td></tr>
+      <tr class="tot"><th>Variance</th><td class="${variance===0?'ok':'bad'}">${variance>0?'+':''}${variance.toLocaleString()} L${variance===0?' &#10003;':' &#9888;'}</td></tr>
+    </table>
+    <div class="signoff">
+      <b>Period summary</b><br>
+      Invoices in period: ${invoices.length?esc(invoices.join(', ')):'none recorded'}<br>
+      Fuel checks completed: ${checks.length}${failCount?` &nbsp;(<span class="bad">${failCount} with sample failure</span>)`:' (all samples passed)'}<br>
+      Aircraft refuels: ${refuels.length} &nbsp;&middot;&nbsp; Rebulks: ${rebulks.length}
+      <div style="display:flex;gap:20px;margin-top:8px">
+        <div style="flex:1">Checked by:<div class="line"></div></div>
+        <div style="flex:1">Signature:<div class="line"></div></div>
+        <div style="width:110px">Date:<div class="line"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="foot">
+    <div>Owner: NPGO &nbsp;&nbsp; Date: June 2025</div>
+    <div>Sheet 2 of 2 &nbsp;&nbsp; Revision: 0</div>
+  </div>
+</div>
+<script>window.addEventListener('load',function(){setTimeout(function(){try{window.print();}catch(e){}},400);});<\/script>
+</body></html>`;
+
+  const w=window.open('','_blank');
+  if(!w){showToast('⚠ ALLOW POP-UPS TO PRINT',true);return;}
+  w.document.open();w.document.write(html);w.document.close();
+  showToast(`✓ ${periodLabel.toUpperCase()} RECORD GENERATED`);
+}
+
+function openReset(){
+  const counts=Object.keys(logs).map(k=>{
+    const l=logs[k];return (l.uplift.length+l.replen.length+l.fuelchk.length);
+  }).reduce((a,b)=>a+b,0);
+  const lr=window.__lastReset;
+  document.getElementById('reset-warn').innerHTML=
+    '&#x26A0; This permanently deletes <b>'+counts+'</b> record'+(counts===1?'':'s')+
+    ' across all bases for every user, and cannot be undone.'+
+    (lr?'<br><br>Last reset: '+esc(lr.at)+' by '+esc(lr.by):'');
+  ['rs-code','rs-level','rs-confirm'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('modal-reset').classList.add('open');
+}
+
+async function confirmReset(){
+  const adminCode=document.getElementById('rs-code').value.trim();
+  const level=document.getElementById('rs-level').value;
+  if(document.getElementById('rs-confirm').value.trim().toUpperCase()!=='RESET'){
+    showToast('⚠ TYPE RESET TO CONFIRM',true);return;
+  }
+  if(!adminCode){showToast('⚠ RESET CODE REQUIRED',true);return;}
+  inFlight=true;setSync('busy');
+  try{
+    const res=await api('reset',{adminCode,level});
+    window.__lastReset=res.state.lastReset;
+    alertedSites={};
+    applyState(res.state);setSync('live');
+    closeModal('modal-reset');
+    showToast('✓ TEST DATA RESET');
+  }catch(e){
+    showToast('⚠ '+String(e.message||e).toUpperCase(),true);
+  }finally{inFlight=false;}
+}
+
+function showToast(msg,isError=false){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.style.background=isError?'var(--red)':'var(--green)';t.style.color=isError?'#fff':'#000';
+  t.classList.add('show');setTimeout(()=>t.classList.remove('show'),3200);
+}
+
+document.getElementById('p1').focus();
+</script>
+</body>
+</html>
