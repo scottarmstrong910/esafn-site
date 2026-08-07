@@ -205,14 +205,16 @@ function applyFuelChk(state, sid, r, unit) {
 
   site.quantity = after;
   site.status = deriveStatus(after, anyFail);
-  if (str(r.grade)) site.fuelGrade = str(r.grade, 40);
-  if (str(r.tank)) site.tankSerial = str(r.tank, 40);
   if (str(r.capsuleExpRaw)) site.capsuleExpiry = str(r.capsuleExpRaw, 20);
 
   state.logs[sid].fuelchk.push({
     datetime: t.datetime, date: t.date, iso: t.iso,
     inspType: r.inspType === "Rebulk" ? "Rebulk" : "Daily",
-    location: str(r.location, 120), grade: str(r.grade, 40), tank: str(r.tank, 40),
+    // Taken from the site record, not the operator - these are fixed properties
+    // of the installation and only need to appear on the printed FRM-GO-402.
+    location: `${site.name} (${site.icao})`,
+    grade: site.fuelGrade || "",
+    tank: site.tankSerial || "",
     visualSign: str(r.visualSign, 40), name: str(r.name, 80), unit: str(r.unit, 40) || unit,
     capsuleExp: str(r.capsuleExp, 20),
     sump, filter, hose, timeComplete: str(r.timeComplete, 10),
@@ -230,7 +232,15 @@ const json = (body, status = 200) =>
     headers: { "content-type": "application/json", "cache-control": "no-store" }
   });
 
-export default async (req) => {
+/* Identifies the running build so open tabs can notice a new deploy.
+   Falls back to a constant, which simply means no update prompt is ever
+   shown - preferable to prompting people to reload for no reason. */
+function buildVersion(context) {
+  return (context && context.deploy && context.deploy.id) ||
+         process.env.DEPLOY_ID || process.env.COMMIT_REF || "dev";
+}
+
+export default async (req, context) => {
   if (req.method !== "POST") return json({ error: "Method not allowed" }, 405);
 
   let body;
@@ -242,7 +252,7 @@ export default async (req) => {
   try {
     if (body.action === "login" || body.action === "state") {
       const { data } = await readState();
-      return json({ unit: who.unit, base: who.base, state: data, threshold: LOW_FUEL_THRESHOLD });
+      return json({ unit: who.unit, base: who.base, state: data, threshold: LOW_FUEL_THRESHOLD, version: buildVersion(context) });
     }
 
     if (body.action === "record") {
@@ -258,7 +268,7 @@ export default async (req) => {
       const out = await mutate(st => handler(st, sid, rec, who.unit));
 
       if (out.error) return json({ error: out.error, state: out.state }, 409);
-      return json({ unit: who.unit, base: who.base, state: out.state, threshold: LOW_FUEL_THRESHOLD });
+      return json({ unit: who.unit, base: who.base, state: out.state, threshold: LOW_FUEL_THRESHOLD, version: buildVersion(context) });
     }
 
     // Beta testing: wipe all logs and set both bowsers to a chosen level.
@@ -279,7 +289,7 @@ export default async (req) => {
       st.seq = (current.data.seq || 0) + 1;
       st.lastReset = { by: who.unit, at: nowParts().datetime, level: level === null ? "full" : level };
       await store().setJSON(KEY, st);
-      return json({ unit: who.unit, base: who.base, state: st, threshold: LOW_FUEL_THRESHOLD });
+      return json({ unit: who.unit, base: who.base, state: st, threshold: LOW_FUEL_THRESHOLD, version: buildVersion(context) });
     }
 
     return json({ error: "Unknown action" }, 400);

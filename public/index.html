@@ -26,6 +26,11 @@ header{background:var(--surface);border-bottom:1px solid var(--border);padding:0
 .sync-pill.offline{color:var(--red);border-color:rgba(255,61,61,0.45);}
 .sync-pill.offline .sync-dot{background:var(--red);}
 .modal.busy{opacity:0.55;pointer-events:none;}
+.update-bar{position:fixed;left:50%;top:70px;transform:translateX(-50%) translateY(-120px);display:flex;align-items:center;gap:14px;background:var(--surface2);border:1px solid var(--accent);border-radius:8px;padding:11px 16px;z-index:320;transition:transform .35s ease;box-shadow:0 8px 28px rgba(0,0,0,0.55);}
+.update-bar.show{transform:translateX(-50%) translateY(0);}
+.update-bar span{font-family:var(--mono);font-size:11px;color:var(--accent);letter-spacing:0.08em;text-transform:uppercase;white-space:nowrap;}
+.update-bar button{background:var(--accent);color:#000;border:none;border-radius:5px;font-family:var(--display);font-size:12px;font-weight:700;letter-spacing:0.1em;padding:7px 14px;cursor:pointer;}
+.update-bar button:hover{opacity:0.88;}
 .beta-btn{background:none;border:1px dashed var(--purple);color:var(--purple);font-family:var(--mono);font-size:10px;letter-spacing:0.12em;padding:4px 9px;border-radius:3px;cursor:pointer;transition:background .15s;}
 .beta-btn:hover{background:rgba(206,147,216,0.12);}
 .warn-box{background:rgba(255,61,61,0.1);border:1px solid rgba(255,61,61,0.4);border-radius:6px;padding:12px 14px;font-family:var(--mono);font-size:11px;color:var(--red);line-height:1.7;letter-spacing:0.04em;margin-bottom:16px;}
@@ -298,12 +303,6 @@ select.res-fail{background-color:#ffdede;color:#9d0000;font-weight:bold;}
     </div>
     <div class="hint" id="insp-hint">Before first use of the fuel installation each day, for in-use fuel installations.</div>
 
-    <div class="frow3">
-      <div class="ff"><label>Location</label><input type="text" id="fc-location" placeholder="Site"></div>
-      <div class="ff"><label>Fuel Grade</label><input type="text" id="fc-grade" placeholder="e.g. Jet A-1"></div>
-      <div class="ff"><label>Vehicle Reg / Tank Serial</label><input type="text" id="fc-tank" placeholder="e.g. WX12 ABC"></div>
-    </div>
-
     <hr class="sec-div"><div class="sec-title">&#x25B8; Personnel &amp; Visual Inspection</div>
     <div class="frow">
       <div class="ff"><label>Daily Visual Inspection Complete &mdash; Sign</label><input type="text" id="fc-visual-sign" placeholder="Signature / initials"></div>
@@ -444,6 +443,11 @@ select.res-fail{background-color:#ffdede;color:#9d0000;font-weight:bold;}
   </div>
 </div>
 
+<div class="update-bar" id="update-bar">
+  <span>&#x21BB; New version deployed</span>
+  <button onclick="location.reload()">RELOAD</button>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -456,6 +460,8 @@ const DEFAULT_FUEL_GRADE  = 'Jet A-1';
 
 // Sites, logs and access codes are held server-side. Nothing authoritative lives in this page.
 let SITES={},logs={},SEQ=-1,accessCode=null,syncTimer=null,cardsBuilt=false,inFlight=false;
+// Build identity, so a tab left open overnight notices it is running old code.
+let BUILD=null,updateReady=false;
 
 let currentUnit=null,currentSite=null,inspType='Daily',pendingRebulkSid=null,lowFuelSid=null,alertedSites={},printSid=null,myBase=null;
 
@@ -492,7 +498,19 @@ async function api(action,payload){
   let data={};
   try{data=await res.json();}catch(e){}
   if(!res.ok){const err=new Error(data.error||('Connection error '+res.status));err.state=data.state;err.status=res.status;throw err;}
+  checkVersion(data.version);
   return data;
+}
+
+// A deploy changes the build id. Prompt rather than force-reload, so nobody
+// loses a half-completed form mid-entry.
+function checkVersion(v){
+  if(!v||v==='dev')return;
+  if(BUILD===null){BUILD=v;return;}
+  if(v!==BUILD&&!updateReady){
+    updateReady=true;
+    document.getElementById('update-bar').classList.add('show');
+  }
 }
 
 function setSync(mode){
@@ -980,9 +998,6 @@ function openFuelChk(sid,type){
   currentSite=SITES[sid];
   document.getElementById('fuelchk-site-lbl').textContent=`${currentSite.name} (${currentSite.icao}) — ${currentSite.quantity.toLocaleString()}L current`;
   setInspType(type||'Daily');
-  document.getElementById('fc-location').value=`${currentSite.name} (${currentSite.icao})`;
-  document.getElementById('fc-grade').value=currentSite.fuelGrade||DEFAULT_FUEL_GRADE;
-  document.getElementById('fc-tank').value=currentSite.tankSerial||'';
   ['fc-visual-sign','fc-name','fc-result','fc-notes'].forEach(id=>document.getElementById(id).value='');
   document.getElementById('fc-unit').value=currentUnit||'';
   document.getElementById('fc-capsule-exp').value=currentSite.capsuleExpiry||'';
@@ -1020,9 +1035,6 @@ async function confirmFuelChk(){
   const capsuleRaw=document.getElementById('fc-capsule-exp').value;
   const rec={
     inspType:inspType,
-    location:document.getElementById('fc-location').value.trim(),
-    grade:document.getElementById('fc-grade').value.trim(),
-    tank:document.getElementById('fc-tank').value.trim(),
     visualSign:document.getElementById('fc-visual-sign').value.trim(),
     name:document.getElementById('fc-name').value.trim(),
     unit:document.getElementById('fc-unit').value.trim(),
